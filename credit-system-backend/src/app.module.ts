@@ -8,6 +8,8 @@ import { AuthModule } from './infrastructure/auth/auth.module';
 import { AuthController } from './interfaces/http/auth.controller';
 import { COUNTRY_REPOSITORY } from './domain/interfaces/country.repository';
 import { PrismaCountryRepository } from './infrastructure/prisma/repositories/prisma-country.repository';
+import { PrismaUserRepository } from './infrastructure/prisma/repositories/prisma-user.repository';
+import { USER_REPOSITORY } from './domain/interfaces/user.repository';
 
 @Module({
   imports: [PrismaModule, AuthModule],
@@ -21,6 +23,10 @@ import { PrismaCountryRepository } from './infrastructure/prisma/repositories/pr
     {
       provide: COUNTRY_REPOSITORY,
       useClass: PrismaCountryRepository,
+    },
+    {
+      provide: USER_REPOSITORY,
+      useClass: PrismaUserRepository,
     },
   ],
   exports: [CREDIT_REQUEST_REPOSITORY, COUNTRY_REPOSITORY],
