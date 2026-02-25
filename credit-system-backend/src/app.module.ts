@@ -1,9 +1,22 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
+import { CREDIT_REQUEST_REPOSITORY } from './domain/interfaces/credit-request.repository';
+import { PrismaCreditRequestRepository } from './infrastructure/prisma/repositories/prisma-credit-request.repository';
+import { CreditRequestController } from './interfaces/http/credit-request.controller';
+import { CreditRequestService } from './application/services/credit-request.service';
+import { AuthModule } from './infrastructure/auth/auth.module';
+import { AuthController } from './interfaces/http/auth.controller';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [],
-  providers: [],
+  imports: [PrismaModule, AuthModule],
+  controllers: [CreditRequestController, AuthController],
+  providers: [
+    CreditRequestService,
+    {
+      provide: CREDIT_REQUEST_REPOSITORY,
+      useClass: PrismaCreditRequestRepository,
+    },
+  ],
+  exports: [CREDIT_REQUEST_REPOSITORY],
 })
 export class AppModule {}
