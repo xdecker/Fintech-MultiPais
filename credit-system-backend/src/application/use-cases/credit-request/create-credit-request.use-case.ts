@@ -4,6 +4,8 @@ import { CreditRequestRepository } from 'src/domain/interfaces/credit-request.re
 import { CountryStrategyFactory } from 'src/domain/strategies/country-strategy.factory';
 import { GetCountryByIdUseCase } from '../country/get-country-by-id.use-case';
 import { BadRequestException } from '@nestjs/common';
+import { CreditRequestStatus } from 'src/domain/entities/enums/credit-request-status.enum';
+import { riskQueue } from 'src/workers/risk-evaluation.worker';
 
 interface CreateCreditRequestInput {
   amount: number;
@@ -13,6 +15,20 @@ interface CreateCreditRequestInput {
   document: string;
   countryId: string;
   createdById: string;
+}
+
+interface AddStatusHistoryInput {
+  creditRequestId: string;
+  previousStatus?: CreditRequestStatus;
+  newStatus: CreditRequestStatus;
+  changedById: string;
+}
+
+interface AddEvaluationInput {
+  creditRequestId: string;
+  score: number;
+  riskLevel: string;
+  decision: CreditRequestStatus;
 }
 
 export class CreateCreditRequestUseCase {
@@ -47,6 +63,17 @@ export class CreateCreditRequestUseCase {
     strategy.validateBusinessRules(creditRequest);
 
     await this.creditRequestRepository.save(creditRequest);
+
+    await this.creditRequestRepository.addStatusHistory({
+      creditRequestId: creditRequest.id,
+      previousStatus: CreditRequestStatus.PENDING,
+      newStatus: creditRequest.status,
+      changedById: input.createdById,
+    });
+    console.log('agregando cola');
+    await riskQueue.add('evaluate-risk', {
+      creditRequestId: creditRequest.id,
+    });
 
     return creditRequest;
   }

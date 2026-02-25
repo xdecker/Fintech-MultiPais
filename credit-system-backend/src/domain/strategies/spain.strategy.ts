@@ -1,6 +1,6 @@
 import { ICountryStrategy } from './country-strategy.interface';
 import { CreditRequest } from '../entities/credit-request.entity';
-import { CreditRequestStatus } from '../entities/credit-request-status.enum';
+import { CreditRequestStatus } from '../entities/enums/credit-request-status.enum';
 
 export class SpainStrategy implements ICountryStrategy {
   validateDocument(document: string): boolean {
@@ -12,6 +12,7 @@ export class SpainStrategy implements ICountryStrategy {
       request.amount > 10000 &&
       request.status === CreditRequestStatus.PENDING
     ) {
+      console.log("subir a in review");
       request.submitForReview();
     }
   }

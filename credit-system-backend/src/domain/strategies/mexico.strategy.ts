@@ -1,6 +1,6 @@
 import { ICountryStrategy } from './country-strategy.interface';
 import { CreditRequest } from '../entities/credit-request.entity';
-import { CreditRequestStatus } from '../entities/credit-request-status.enum';
+import { CreditRequestStatus } from '../entities/enums/credit-request-status.enum';
 
 export class MexicoStrategy implements ICountryStrategy {
   validateDocument(document: string): boolean {

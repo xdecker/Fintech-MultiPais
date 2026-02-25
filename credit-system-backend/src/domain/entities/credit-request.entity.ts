@@ -1,4 +1,4 @@
-import { CreditRequestStatus } from './credit-request-status.enum';
+import { CreditRequestStatus } from './enums/credit-request-status.enum';
 import { isEmail } from 'class-validator';
 
 export class CreditRequest {
