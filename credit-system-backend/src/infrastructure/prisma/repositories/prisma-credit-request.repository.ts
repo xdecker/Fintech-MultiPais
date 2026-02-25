@@ -17,6 +17,7 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
         currency: creditRequest.currency,
         applicantName: creditRequest.applicantName,
         applicantEmail: creditRequest.applicantEmail,
+        document: creditRequest.document,
         countryId: creditRequest.countryId,
         createdById: creditRequest.createdById,
         status: creditRequest.status as CreditStatus,

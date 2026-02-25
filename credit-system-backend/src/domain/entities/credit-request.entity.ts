@@ -10,6 +10,7 @@ export class CreditRequest {
     private readonly _currency: string,
     private readonly _applicantName: string,
     private readonly _applicantEmail: string,
+    private readonly _document: string,
     private readonly _countryId: string,
     private readonly _createdById: string,
     status?: CreditRequestStatus,
@@ -38,6 +39,10 @@ export class CreditRequest {
 
   get applicantEmail() {
     return this._applicantEmail;
+  }
+
+  get document() {
+    return this._document;
   }
 
   get countryId() {

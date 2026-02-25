@@ -1,4 +1,11 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsPositive, IsString, Length } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  IsString,
+  Length,
+} from 'class-validator';
 
 export class CreateCreditRequestDto {
   @IsNumber()
@@ -16,8 +23,10 @@ export class CreateCreditRequestDto {
   @IsEmail()
   applicantEmail: string;
 
+  @IsNotEmpty()
+  document: string;
+
   @IsString()
   @IsNotEmpty()
   countryId: string;
-
 }

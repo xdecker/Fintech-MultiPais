@@ -1,4 +1,12 @@
-import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Get,
+  Param,
+} from '@nestjs/common';
 import { CreditRequestService } from 'src/application/services/credit-request.service';
 import { CreateCreditRequestDto } from 'src/application/dto/create-credit-request.dto';
 import { JwtAuthGuard } from 'src/infrastructure/auth/jwt-auth.guard';
@@ -14,7 +22,7 @@ export class CreditRequestController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.USER)
   async create(@Req() req, @Body() dto: CreateCreditRequestDto) {
-    const result = await this.creditRequestService.create(dto, req.user.id,);
+    const result = await this.creditRequestService.create(dto, req.user.id);
 
     return {
       id: result.id,
@@ -22,5 +30,26 @@ export class CreditRequestController {
       amount: result.amount,
       currency: result.currency,
     };
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.REVIEWER)
+  async getAll() {
+    return this.creditRequestService.getAll();
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.REVIEWER)
+  async getById(@Param('id') id: string) {
+    return this.creditRequestService.getById(id);
+  }
+
+  @Get('country/:countryId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.REVIEWER)
+  async getByCountry(@Param('countryId') countryId: string) {
+    return this.creditRequestService.getByCountry(countryId);
   }
 }

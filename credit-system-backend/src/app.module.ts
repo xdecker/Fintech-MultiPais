@@ -6,6 +6,8 @@ import { CreditRequestController } from './interfaces/http/credit-request.contro
 import { CreditRequestService } from './application/services/credit-request.service';
 import { AuthModule } from './infrastructure/auth/auth.module';
 import { AuthController } from './interfaces/http/auth.controller';
+import { COUNTRY_REPOSITORY } from './domain/interfaces/country.repository';
+import { PrismaCountryRepository } from './infrastructure/prisma/repositories/prisma-country.repository';
 
 @Module({
   imports: [PrismaModule, AuthModule],
@@ -16,7 +18,11 @@ import { AuthController } from './interfaces/http/auth.controller';
       provide: CREDIT_REQUEST_REPOSITORY,
       useClass: PrismaCreditRequestRepository,
     },
+    {
+      provide: COUNTRY_REPOSITORY,
+      useClass: PrismaCountryRepository,
+    },
   ],
-  exports: [CREDIT_REQUEST_REPOSITORY],
+  exports: [CREDIT_REQUEST_REPOSITORY, COUNTRY_REPOSITORY],
 })
 export class AppModule {}
