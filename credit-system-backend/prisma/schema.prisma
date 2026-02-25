@@ -50,6 +50,7 @@ model CreditRequest {
   currency String
   applicantName  String
   applicantEmail String
+  document String
   countryId String @db.Uuid
   country   Country @relation(fields: [countryId], references: [id])
   createdById String @db.Uuid
