@@ -17,7 +17,7 @@ export class CreditRequestService {
     );
   }
 
-  async create(dto: CreateCreditRequestDto) {
-    return this.createCreditRequestUseCase.execute(dto);
+  async create(dto: CreateCreditRequestDto, id: string) {
+    return this.createCreditRequestUseCase.execute({ ...dto, createdById: id });
   }
 }

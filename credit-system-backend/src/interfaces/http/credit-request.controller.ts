@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { CreditRequestService } from 'src/application/services/credit-request.service';
 import { CreateCreditRequestDto } from 'src/application/dto/create-credit-request.dto';
 import { JwtAuthGuard } from 'src/infrastructure/auth/jwt-auth.guard';
@@ -13,8 +13,8 @@ export class CreditRequestController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.USER)
-  async create(@Body() dto: CreateCreditRequestDto) {
-    const result = await this.creditRequestService.create(dto);
+  async create(@Req() req, @Body() dto: CreateCreditRequestDto) {
+    const result = await this.creditRequestService.create(dto, req.user.id,);
 
     return {
       id: result.id,

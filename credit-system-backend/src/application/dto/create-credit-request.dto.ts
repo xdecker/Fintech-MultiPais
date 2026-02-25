@@ -20,7 +20,4 @@ export class CreateCreditRequestDto {
   @IsNotEmpty()
   countryId: string;
 
-  @IsString()
-  @IsNotEmpty()
-  createdById: string;
 }
