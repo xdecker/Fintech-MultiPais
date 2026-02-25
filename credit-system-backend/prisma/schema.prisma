@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -8,7 +7,7 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(uuid())
+  id             String          @id @default(uuid()) @db.Uuid
   email          String          @unique
   password       String
   role           Role
@@ -27,22 +26,18 @@ enum Role {
 }
 
 model Country {
-  id   String @id @default(uuid())
+  id   String @id @default(uuid()) @db.Uuid
   code String @unique
   name String
-
   users          UserCountry[]
   creditRequests CreditRequest[]
-
   createdAt DateTime @default(now())
 }
 
 model UserCountry {
-  id String @id @default(uuid())
-
-  userId    String
-  countryId String
-
+  id String @id @default(uuid()) @db.Uuid
+  userId    String @db.Uuid
+  countryId String @db.Uuid
   user    User    @relation(fields: [userId], references: [id])
   country Country @relation(fields: [countryId], references: [id])
 
@@ -50,24 +45,18 @@ model UserCountry {
 }
 
 model CreditRequest {
-  id       String  @id @default(uuid())
+  id       String  @id @default(uuid()) @db.Uuid
   amount   Decimal @db.Decimal(14, 2)
   currency String
-
   applicantName  String
   applicantEmail String
-
-  countryId String
+  countryId String @db.Uuid
   country   Country @relation(fields: [countryId], references: [id])
-
-  createdById String
+  createdById String @db.Uuid
   createdBy   User   @relation(fields: [createdById], references: [id])
-
   status CreditStatus @default(PENDING)
-
   evaluations   CreditEvaluation[]
   statusHistory CreditStatusHistory[]
-
   createdAt DateTime @default(now())
 }
 
@@ -79,29 +68,23 @@ enum CreditStatus {
 }
 
 model CreditStatusHistory {
-  id String @id @default(uuid())
+  id String @id @default(uuid()) @db.Uuid
 
-  creditRequestId String
+  creditRequestId String @db.Uuid
   creditRequest   CreditRequest @relation(fields: [creditRequestId], references: [id])
-
   previousStatus CreditStatus?
   newStatus      CreditStatus
-
-  changedById String?
+  changedById String? @db.Uuid
   changedBy   User?   @relation(fields: [changedById], references: [id])
-
   createdAt DateTime @default(now())
 }
 
 model CreditEvaluation {
-  id String @id @default(uuid())
-
-  creditRequestId String
+  id String @id @default(uuid()) @db.Uuid
+  creditRequestId String @db.Uuid
   creditRequest   CreditRequest @relation(fields: [creditRequestId], references: [id])
-
   score     Int
   riskLevel String
   decision  CreditStatus
-
   evaluatedAt DateTime @default(now())
 }
