@@ -11,6 +11,8 @@ import {
 import { BankResultDto } from '../dto/bank-result.dto';
 import { EVENTPUBLISHER } from 'src/domain/interfaces/websocket/websocket-event.publisher';
 import { EventPublisher } from 'src/domain/interfaces/event-publisher.interface';
+import { REDIS_SERVICE_TOKEN } from 'src/infrastructure/cache/redis.service';
+import { CacheService } from 'src/domain/interfaces/cache.interface';
 
 @Injectable()
 export class BankWebhookService {
@@ -22,6 +24,8 @@ export class BankWebhookService {
     private userRepo: UserRepository,
     @Inject(EVENTPUBLISHER)
     private eventPublisher: EventPublisher,
+    @Inject(REDIS_SERVICE_TOKEN)
+    private cache: CacheService,
   ) {}
 
   async handle(dto: BankResultDto) {
@@ -29,6 +33,7 @@ export class BankWebhookService {
       this.repo,
       this.userRepo,
       this.eventPublisher,
+      this.cache,
     );
 
     await useCase.execute(dto);

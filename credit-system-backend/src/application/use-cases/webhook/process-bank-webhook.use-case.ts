@@ -5,7 +5,10 @@ import { BankResultDto } from 'src/infrastructure/webhook/dto/bank-result.dto';
 import { Inject } from '@nestjs/common';
 import { EventPublisher } from 'src/domain/interfaces/event-publisher.interface';
 import { EVENTPUBLISHER } from 'src/domain/interfaces/websocket/websocket-event.publisher';
-import { CREDIT_EVENTS } from 'src/domain/events/credti-events';
+import { CREDIT_EVENTS } from 'src/domain/events/credit-events';
+import { CacheKeys, LIST_VERSION_KEY } from 'src/application/cache/cache.keys';
+import { REDIS_SERVICE_TOKEN } from 'src/infrastructure/cache/redis.service';
+import { CacheService } from 'src/domain/interfaces/cache.interface';
 
 export class ProcessBankWebhookUseCase {
   constructor(
@@ -14,6 +17,8 @@ export class ProcessBankWebhookUseCase {
     private readonly userRepository: UserRepository,
 
     private eventPublisher: EventPublisher,
+    @Inject(REDIS_SERVICE_TOKEN)
+    private cache: CacheService,
   ) {}
 
   async execute(input: BankResultDto): Promise<void> {
@@ -60,5 +65,11 @@ export class ProcessBankWebhookUseCase {
         status: creditRequest.status,
       },
     });
+
+    await this.cache.del(
+      CacheKeys.creditDetail(creditRequest.id),
+    );
+    
+    await this.cache.incr(LIST_VERSION_KEY);
   }
 }

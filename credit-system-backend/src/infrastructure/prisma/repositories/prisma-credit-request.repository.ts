@@ -36,6 +36,7 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
     });
   }
   async findById(id: string): Promise<CreditRequest | null> {
+    console.log('🔥 DB HIT');
     const record = await this.prisma.creditRequest.findUnique({
       where: { id },
     });
@@ -54,24 +55,30 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
       record.status as CreditRequestStatus,
     );
   }
-  async findAll(): Promise<CreditRequest[]> {
-    const records = await this.prisma.creditRequest.findMany();
+  async findAll(page: number, limit: number): Promise<CreditRequest[]> {
+    console.log('🔥 DB HIT');
+    const records = await this.prisma.creditRequest.findMany({
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    });
 
     return records.map(
-      (record) =>
+      (r) =>
         new CreditRequest(
-          record.id,
-          Number(record.amount),
-          record.currency,
-          record.applicantName,
-          record.applicantEmail,
-          record.document,
-          record.countryId,
-          record.createdById,
-          record.status as CreditRequestStatus,
+          r.id,
+          Number(r.amount),
+          r.currency,
+          r.applicantName,
+          r.applicantEmail,
+          r.document,
+          r.countryId,
+          r.createdById,
+          r.status as CreditRequestStatus,
         ),
     );
   }
+
   async findByCountry(countryId: string): Promise<CreditRequest[]> {
     const records = await this.prisma.creditRequest.findMany({
       where: { countryId },

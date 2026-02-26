@@ -18,6 +18,10 @@ import {
   EVENTPUBLISHER,
   WebsocketEventPublisher,
 } from './domain/interfaces/websocket/websocket-event.publisher';
+import {
+  REDIS_SERVICE_TOKEN,
+  RedisService,
+} from './infrastructure/cache/redis.service';
 
 @Module({
   imports: [PrismaModule, AuthModule, AppLoggerModule],
@@ -42,12 +46,17 @@ import {
       provide: USER_REPOSITORY,
       useClass: PrismaUserRepository,
     },
+    {
+      provide: REDIS_SERVICE_TOKEN,
+      useClass: RedisService,
+    },
   ],
   exports: [
     CREDIT_REQUEST_REPOSITORY,
     COUNTRY_REPOSITORY,
     USER_REPOSITORY,
     EVENTPUBLISHER,
+    REDIS_SERVICE_TOKEN,
   ],
 })
 export class AppModule {}

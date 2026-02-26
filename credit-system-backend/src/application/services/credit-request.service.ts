@@ -3,7 +3,6 @@ import { CreateCreditRequestUseCase } from '../use-cases/credit-request/create-c
 import { CreateCreditRequestDto } from '../dto/create-credit-request.dto';
 import { CREDIT_REQUEST_REPOSITORY } from '../../domain/interfaces/repositories/credit-request.repository';
 import type { CreditRequestRepository } from '../../domain/interfaces/repositories/credit-request.repository';
-import { CreditRequest } from '@prisma/client';
 import { GetAllCreditRequestsUseCase } from '../use-cases/credit-request/get-all-credit-request.use-case';
 import { GetCreditRequestByIdUseCase } from '../use-cases/credit-request/get-credit-request-by-Id.use-case';
 import { GetCreditRequestsByCountryUseCase } from '../use-cases/credit-request/get-credit-requests-by-country.use-case';
@@ -12,6 +11,8 @@ import {
   CountryRepository,
 } from 'src/domain/interfaces/repositories/country.repository';
 import { GetCountryByIdUseCase } from '../use-cases/country/get-country-by-id.use-case';
+import { CacheService } from 'src/domain/interfaces/cache.interface';
+import { REDIS_SERVICE_TOKEN } from 'src/infrastructure/cache/redis.service';
 
 @Injectable()
 export class CreditRequestService {
@@ -26,6 +27,9 @@ export class CreditRequestService {
 
     @Inject(COUNTRY_REPOSITORY)
     private readonly countryRepository: CountryRepository,
+
+    @Inject(REDIS_SERVICE_TOKEN)
+    private cache: CacheService,
   ) {
     const getCountryByIdUseCase = new GetCountryByIdUseCase(
       this.countryRepository,
@@ -37,17 +41,19 @@ export class CreditRequestService {
     );
     this.getAllUseCase = new GetAllCreditRequestsUseCase(
       this.creditRequestRepository,
+      this.cache,
     );
     this.getByIdUseCase = new GetCreditRequestByIdUseCase(
       this.creditRequestRepository,
+      this.cache,
     );
     this.getByCountryUseCase = new GetCreditRequestsByCountryUseCase(
       this.creditRequestRepository,
     );
   }
 
-  async getAll() {
-    return this.getAllUseCase.execute();
+  async getAll(page = 1, limit = 10) {
+    return this.getAllUseCase.execute(page, limit);
   }
 
   async getById(id: string) {
