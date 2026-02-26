@@ -11,12 +11,15 @@ import { PrismaCountryRepository } from './infrastructure/prisma/repositories/pr
 import { PrismaUserRepository } from './infrastructure/prisma/repositories/prisma-user.repository';
 import { USER_REPOSITORY } from './domain/interfaces/user.repository';
 import { AppLoggerModule } from './infrastructure/logger/logger.module';
+import { BankWebhookController } from './infrastructure/webhook/bank-webhook/bank-webhook.controller';
+import { BankWebhookService } from './infrastructure/webhook/bank-webhook/bank-webhook.service';
 
 @Module({
   imports: [PrismaModule, AuthModule, AppLoggerModule],
-  controllers: [CreditRequestController, AuthController],
+  controllers: [CreditRequestController, AuthController, BankWebhookController],
   providers: [
     CreditRequestService,
+    BankWebhookService,
     {
       provide: CREDIT_REQUEST_REPOSITORY,
       useClass: PrismaCreditRequestRepository,
@@ -30,6 +33,6 @@ import { AppLoggerModule } from './infrastructure/logger/logger.module';
       useClass: PrismaUserRepository,
     },
   ],
-  exports: [CREDIT_REQUEST_REPOSITORY, COUNTRY_REPOSITORY],
+  exports: [CREDIT_REQUEST_REPOSITORY, COUNTRY_REPOSITORY, USER_REPOSITORY],
 })
 export class AppModule {}

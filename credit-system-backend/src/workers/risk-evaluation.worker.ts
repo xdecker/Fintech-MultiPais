@@ -6,6 +6,7 @@ import { PrismaUserRepository } from 'src/infrastructure/prisma/repositories/pri
 import { BadRequestException } from '@nestjs/common';
 import { BankProviderFactory } from 'src/domain/strategies/bank-provider.factory';
 import { logger } from '../shared/logger/pino.logger';
+import axios from 'axios';
 
 logger.info('Risk worker started');
 
@@ -55,37 +56,13 @@ new Worker(
 
       const previousStatus = creditRequest.status;
       logger.info({ status: creditRequest.status }, 'Current DB status');
-      switch (newStatus) {
-        case CreditRequestStatus.APPROVED:
-          creditRequest.approve();
-          break;
-        case CreditRequestStatus.REJECTED:
-          creditRequest.reject();
-          break;
-        case CreditRequestStatus.UNDER_REVIEW:
-          creditRequest.submitForReview();
-          break;
-      }
 
-      //obtener user admin
-      const user = await userRepo.findByEmail('admin@test.com');
-      if (!user)
-        throw new BadRequestException(
-          'No tiene configurado el usuario administrador del sistema',
-        );
-
-      await creditRequestRepo.addStatusHistory({
-        creditRequestId: creditRequest.id,
-        previousStatus,
-        newStatus: creditRequest.status,
-        changedById: user.id,
-      });
-
-      await creditRequestRepo.addEvaluation({
-        creditRequestId: creditRequest.id,
+      //webhook simulado
+      await axios.post('http://localhost:3000/webhooks/bank-result', {
+        creditRequestId,
         score,
         riskLevel,
-        decision: creditRequest.status,
+        decision: newStatus,
       });
 
       console.log(
