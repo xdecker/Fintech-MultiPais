@@ -6,6 +6,7 @@ import { GetCountryByIdUseCase } from '../country/get-country-by-id.use-case';
 import { BadRequestException } from '@nestjs/common';
 import { CreditRequestStatus } from 'src/domain/entities/enums/credit-request-status.enum';
 import { riskQueue } from 'src/workers/risk-evaluation.worker';
+import { BankProviderFactory } from 'src/domain/strategies/bank-provider.factory';
 
 interface CreateCreditRequestInput {
   amount: number;
@@ -15,20 +16,6 @@ interface CreateCreditRequestInput {
   document: string;
   countryId: string;
   createdById: string;
-}
-
-interface AddStatusHistoryInput {
-  creditRequestId: string;
-  previousStatus?: CreditRequestStatus;
-  newStatus: CreditRequestStatus;
-  changedById: string;
-}
-
-interface AddEvaluationInput {
-  creditRequestId: string;
-  score: number;
-  riskLevel: string;
-  decision: CreditRequestStatus;
 }
 
 export class CreateCreditRequestUseCase {
@@ -44,6 +31,8 @@ export class CreateCreditRequestUseCase {
     }
     const strategy = CountryStrategyFactory.getStrategy(country.code);
     const isValidDocument = strategy.validateDocument(input.document);
+    const provider = BankProviderFactory.create(country.code);
+    const bankInfo = await provider.getBankInformation(input.document);
 
     if (!isValidDocument) {
       throw new BadRequestException('Invalid document for country');
@@ -73,6 +62,7 @@ export class CreateCreditRequestUseCase {
     console.log('agregando cola');
     await riskQueue.add('evaluate-risk', {
       creditRequestId: creditRequest.id,
+      codeCountry: country.code,
     });
 
     return creditRequest;
