@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CreateCreditRequestUseCase } from '../use-cases/credit-request/create-credit-request.use-case';
 import { CreateCreditRequestDto } from '../dto/create-credit-request.dto';
-import { CREDIT_REQUEST_REPOSITORY } from '../../domain/interfaces/credit-request.repository';
-import type { CreditRequestRepository } from '../../domain/interfaces/credit-request.repository';
+import { CREDIT_REQUEST_REPOSITORY } from '../../domain/interfaces/repositories/credit-request.repository';
+import type { CreditRequestRepository } from '../../domain/interfaces/repositories/credit-request.repository';
 import { CreditRequest } from '@prisma/client';
 import { GetAllCreditRequestsUseCase } from '../use-cases/credit-request/get-all-credit-request.use-case';
 import { GetCreditRequestByIdUseCase } from '../use-cases/credit-request/get-credit-request-by-Id.use-case';
@@ -10,7 +10,7 @@ import { GetCreditRequestsByCountryUseCase } from '../use-cases/credit-request/g
 import {
   COUNTRY_REPOSITORY,
   CountryRepository,
-} from 'src/domain/interfaces/country.repository';
+} from 'src/domain/interfaces/repositories/country.repository';
 import { GetCountryByIdUseCase } from '../use-cases/country/get-country-by-id.use-case';
 
 @Injectable()

@@ -1,5 +1,5 @@
 import { Country } from 'src/domain/entities/country.entity';
-import { CountryRepository } from 'src/domain/interfaces/country.repository';
+import { CountryRepository } from 'src/domain/interfaces/repositories/country.repository';
 
 export class GetCountryByIdUseCase {
   constructor(private readonly countryRepository: CountryRepository) {}

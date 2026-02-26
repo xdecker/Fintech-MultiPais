@@ -3,12 +3,14 @@ import { ProcessBankWebhookUseCase } from 'src/application/use-cases/webhook/pro
 import {
   CREDIT_REQUEST_REPOSITORY,
   CreditRequestRepository,
-} from 'src/domain/interfaces/credit-request.repository';
+} from 'src/domain/interfaces/repositories/credit-request.repository';
 import {
   USER_REPOSITORY,
   UserRepository,
-} from 'src/domain/interfaces/user.repository';
+} from 'src/domain/interfaces/repositories/user.repository';
 import { BankResultDto } from '../dto/bank-result.dto';
+import { EVENTPUBLISHER } from 'src/domain/interfaces/websocket/websocket-event.publisher';
+import { EventPublisher } from 'src/domain/interfaces/event-publisher.interface';
 
 @Injectable()
 export class BankWebhookService {
@@ -18,10 +20,16 @@ export class BankWebhookService {
 
     @Inject(USER_REPOSITORY)
     private userRepo: UserRepository,
+    @Inject(EVENTPUBLISHER)
+    private eventPublisher: EventPublisher,
   ) {}
 
   async handle(dto: BankResultDto) {
-    const useCase = new ProcessBankWebhookUseCase(this.repo, this.userRepo);
+    const useCase = new ProcessBankWebhookUseCase(
+      this.repo,
+      this.userRepo,
+      this.eventPublisher,
+    );
 
     await useCase.execute(dto);
   }

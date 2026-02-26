@@ -1,13 +1,19 @@
-import { CreditRequestRepository } from 'src/domain/interfaces/credit-request.repository';
+import { CreditRequestRepository } from 'src/domain/interfaces/repositories/credit-request.repository';
 import { CreditRequestStatus } from 'src/domain/entities/enums/credit-request-status.enum';
-import { UserRepository } from 'src/domain/interfaces/user.repository';
+import { UserRepository } from 'src/domain/interfaces/repositories/user.repository';
 import { BankResultDto } from 'src/infrastructure/webhook/dto/bank-result.dto';
+import { Inject } from '@nestjs/common';
+import { EventPublisher } from 'src/domain/interfaces/event-publisher.interface';
+import { EVENTPUBLISHER } from 'src/domain/interfaces/websocket/websocket-event.publisher';
+import { CREDIT_EVENTS } from 'src/domain/events/credti-events';
 
 export class ProcessBankWebhookUseCase {
   constructor(
     private readonly creditRequestRepository: CreditRequestRepository,
 
     private readonly userRepository: UserRepository,
+
+    private eventPublisher: EventPublisher,
   ) {}
 
   async execute(input: BankResultDto): Promise<void> {
@@ -45,6 +51,14 @@ export class ProcessBankWebhookUseCase {
       score: input.score,
       riskLevel: input.riskLevel,
       decision: creditRequest.status,
+    });
+
+    await this.eventPublisher.publish({
+      name: CREDIT_EVENTS.STATUS_CHANGED,
+      payload: {
+        creditRequestId: creditRequest.id,
+        status: creditRequest.status,
+      },
     });
   }
 }

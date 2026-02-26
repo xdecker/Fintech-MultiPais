@@ -1,23 +1,33 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
-import { CREDIT_REQUEST_REPOSITORY } from './domain/interfaces/credit-request.repository';
+import { CREDIT_REQUEST_REPOSITORY } from './domain/interfaces/repositories/credit-request.repository';
 import { PrismaCreditRequestRepository } from './infrastructure/prisma/repositories/prisma-credit-request.repository';
 import { CreditRequestController } from './interfaces/http/credit-request.controller';
 import { CreditRequestService } from './application/services/credit-request.service';
 import { AuthModule } from './infrastructure/auth/auth.module';
 import { AuthController } from './interfaces/http/auth.controller';
-import { COUNTRY_REPOSITORY } from './domain/interfaces/country.repository';
+import { COUNTRY_REPOSITORY } from './domain/interfaces/repositories/country.repository';
 import { PrismaCountryRepository } from './infrastructure/prisma/repositories/prisma-country.repository';
 import { PrismaUserRepository } from './infrastructure/prisma/repositories/prisma-user.repository';
-import { USER_REPOSITORY } from './domain/interfaces/user.repository';
+import { USER_REPOSITORY } from './domain/interfaces/repositories/user.repository';
 import { AppLoggerModule } from './infrastructure/logger/logger.module';
 import { BankWebhookController } from './infrastructure/webhook/bank-webhook/bank-webhook.controller';
 import { BankWebhookService } from './infrastructure/webhook/bank-webhook/bank-webhook.service';
+import { CreditGateway } from './domain/interfaces/websocket/credit.gateway';
+import {
+  EVENTPUBLISHER,
+  WebsocketEventPublisher,
+} from './domain/interfaces/websocket/websocket-event.publisher';
 
 @Module({
   imports: [PrismaModule, AuthModule, AppLoggerModule],
   controllers: [CreditRequestController, AuthController, BankWebhookController],
   providers: [
+    CreditGateway,
+    {
+      provide: EVENTPUBLISHER,
+      useClass: WebsocketEventPublisher,
+    },
     CreditRequestService,
     BankWebhookService,
     {
@@ -33,6 +43,11 @@ import { BankWebhookService } from './infrastructure/webhook/bank-webhook/bank-w
       useClass: PrismaUserRepository,
     },
   ],
-  exports: [CREDIT_REQUEST_REPOSITORY, COUNTRY_REPOSITORY, USER_REPOSITORY],
+  exports: [
+    CREDIT_REQUEST_REPOSITORY,
+    COUNTRY_REPOSITORY,
+    USER_REPOSITORY,
+    EVENTPUBLISHER,
+  ],
 })
 export class AppModule {}

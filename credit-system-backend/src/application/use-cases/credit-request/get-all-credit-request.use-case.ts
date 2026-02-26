@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { CreditRequest } from 'src/domain/entities/credit-request.entity';
-import { CreditRequestRepository } from 'src/domain/interfaces/credit-request.repository';
+import { CreditRequestRepository } from 'src/domain/interfaces/repositories/credit-request.repository';
 
 
 export class GetAllCreditRequestsUseCase {

@@ -3,7 +3,7 @@ import { GetUserbyEmailUseCase } from '../use-cases/user/get-user-by-email.use-c
 import {
   USER_REPOSITORY,
   UserRepository,
-} from 'src/domain/interfaces/user.repository';
+} from 'src/domain/interfaces/repositories/user.repository';
 
 @Injectable()
 export class UserService {
