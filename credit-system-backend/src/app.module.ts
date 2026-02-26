@@ -10,9 +10,10 @@ import { COUNTRY_REPOSITORY } from './domain/interfaces/country.repository';
 import { PrismaCountryRepository } from './infrastructure/prisma/repositories/prisma-country.repository';
 import { PrismaUserRepository } from './infrastructure/prisma/repositories/prisma-user.repository';
 import { USER_REPOSITORY } from './domain/interfaces/user.repository';
+import { AppLoggerModule } from './infrastructure/logger/logger.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, AppLoggerModule],
   controllers: [CreditRequestController, AuthController],
   providers: [
     CreditRequestService,
