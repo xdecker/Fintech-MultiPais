@@ -2,9 +2,12 @@ import { Worker, Queue } from 'bullmq';
 import { PrismaCreditRequestRepository } from '../infrastructure/prisma/repositories/prisma-credit-request.repository';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { CreditRequestStatus } from '../domain/entities/enums/credit-request-status.enum';
-import { CreditRequest } from 'src/domain/entities/credit-request.entity';
 import { PrismaUserRepository } from 'src/infrastructure/prisma/repositories/prisma-user.repository';
 import { BadRequestException } from '@nestjs/common';
+import { BankProviderFactory } from 'src/domain/strategies/bank-provider.factory';
+import { logger } from '../shared/logger/pino.logger';
+
+logger.info('Risk worker started');
 
 export const riskQueue = new Queue('risk-evaluation', {
   connection: {
@@ -21,16 +24,28 @@ new Worker(
   'risk-evaluation',
   async (job) => {
     try {
-      const { creditRequestId } = job.data;
+      const { creditRequestId, codeCountry } = job.data;
       const creditRequest = await creditRequestRepo.findById(creditRequestId);
 
       if (!creditRequest) {
         console.log('Credit request not found:', creditRequestId);
         return;
       }
+      logger.info(`Credit request with: ${JSON.stringify(job.data)}`);
 
-      const score = Math.floor(Math.random() * 400) + 400; // 400-800
-      const riskLevel = score > 600 ? 'LOW' : score > 500 ? 'MEDIUM' : 'HIGH';
+      const provider = BankProviderFactory.create(codeCountry);
+
+      const bankInfo = await provider.getBankInformation(
+        creditRequest.document,
+      );
+
+      const score = bankInfo.score;
+      const riskLevel =
+        score > 600 && bankInfo.debt < 5000
+          ? 'LOW'
+          : score > 500
+            ? 'MEDIUM'
+            : 'HIGH';
 
       let newStatus: CreditRequestStatus;
       if (riskLevel === 'LOW') newStatus = CreditRequestStatus.APPROVED;
@@ -39,7 +54,7 @@ new Worker(
       else newStatus = CreditRequestStatus.REJECTED;
 
       const previousStatus = creditRequest.status;
-      console.log('DB status:', creditRequest.status);
+      logger.info({ status: creditRequest.status }, 'Current DB status');
       switch (newStatus) {
         case CreditRequestStatus.APPROVED:
           creditRequest.approve();
@@ -76,8 +91,17 @@ new Worker(
       console.log(
         `CreditRequest ${creditRequest.id} evaluated. Score: ${score}, Risk: ${riskLevel}, New Status: ${creditRequest.status}`,
       );
+      logger.info(
+        {
+          creditRequestId,
+          score,
+          riskLevel,
+          newStatus: creditRequest.status,
+        },
+        'Risk evaluation completed',
+      );
     } catch (err) {
-      console.error('Worker job failed:', err);
+      logger.error({ err }, 'Worker job failed');
     }
   },
   {
