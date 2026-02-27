@@ -22,11 +22,13 @@ import {
   REDIS_SERVICE_TOKEN,
   RedisService,
 } from './infrastructure/cache/redis.service';
+import { PostgresListenerService } from './infrastructure/db/postgres/postgres-listener.service';
 
 @Module({
   imports: [PrismaModule, AuthModule, AppLoggerModule],
   controllers: [CreditRequestController, AuthController, BankWebhookController],
   providers: [
+    PostgresListenerService,
     CreditGateway,
     {
       provide: EVENTPUBLISHER,

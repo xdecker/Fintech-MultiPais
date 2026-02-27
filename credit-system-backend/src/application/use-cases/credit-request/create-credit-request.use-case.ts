@@ -59,7 +59,6 @@ export class CreateCreditRequestUseCase {
       newStatus: creditRequest.status,
       changedById: input.createdById,
     });
-    console.log('agregando cola');
     await riskQueue.add('evaluate-risk', {
       creditRequestId: creditRequest.id,
       codeCountry: country.code,

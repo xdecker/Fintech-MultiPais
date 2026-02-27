@@ -36,7 +36,6 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
     });
   }
   async findById(id: string): Promise<CreditRequest | null> {
-    console.log('🔥 DB HIT');
     const record = await this.prisma.creditRequest.findUnique({
       where: { id },
     });
@@ -56,7 +55,6 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
     );
   }
   async findAll(page: number, limit: number): Promise<CreditRequest[]> {
-    console.log('🔥 DB HIT');
     const records = await this.prisma.creditRequest.findMany({
       skip: (page - 1) * limit,
       take: limit,

@@ -29,7 +29,7 @@ new Worker(
       const creditRequest = await creditRequestRepo.findById(creditRequestId);
 
       if (!creditRequest) {
-        console.log('Credit request not found:', creditRequestId);
+        logger.error('Credit request not found:', creditRequestId);
         return;
       }
       logger.info(`Credit request with: ${JSON.stringify(job.data)}`);
@@ -65,9 +65,7 @@ new Worker(
         decision: newStatus,
       });
 
-      console.log(
-        `CreditRequest ${creditRequest.id} evaluated. Score: ${score}, Risk: ${riskLevel}, New Status: ${creditRequest.status}`,
-      );
+      
       logger.info(
         {
           creditRequestId,

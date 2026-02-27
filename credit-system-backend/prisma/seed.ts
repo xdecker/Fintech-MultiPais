@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { PrismaService } from '../src/infrastructure/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { logger } from 'src/shared/logger/pino.logger';
 
 async function main() {
   const prisma = new PrismaService();
@@ -8,7 +9,7 @@ async function main() {
   // Conectamos
   await prisma.$connect();
 
-  console.log('Running seed...');
+  logger.info('Running seed...');
 
   // Limpiar datos si quieres pruebas limpias
   await prisma.creditRequest.deleteMany();
@@ -51,7 +52,7 @@ async function main() {
     },
   });
 
-  console.log({ spain, mexico, admin, user });
+  logger.info({ spain, mexico, admin, user });
 
   // Desconectar
   await prisma.$disconnect();

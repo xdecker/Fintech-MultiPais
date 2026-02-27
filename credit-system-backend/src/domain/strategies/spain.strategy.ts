@@ -12,7 +12,6 @@ export class SpainStrategy implements ICountryStrategy {
       request.amount > 10000 &&
       request.status === CreditRequestStatus.PENDING
     ) {
-      console.log("subir a in review");
       request.submitForReview();
     }
   }
