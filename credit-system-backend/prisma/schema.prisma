@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String          @id @default(uuid()) @db.Uuid
+  email          String          @unique
+  password       String
+  role           Role
+  countries      UserCountry[]
+  creditRequests CreditRequest[]
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  CreditStatusHistory CreditStatusHistory[]
+}
+
+enum Role {
+  ADMIN
+  REVIEWER
+  USER
+}
+
+model Country {
+  id   String @id @default(uuid()) @db.Uuid
+  code String @unique
+  name String
+  users          UserCountry[]
+  creditRequests CreditRequest[]
+  createdAt DateTime @default(now())
+}
+
+model UserCountry {
+  id String @id @default(uuid()) @db.Uuid
+  userId    String @db.Uuid
+  countryId String @db.Uuid
+  user    User    @relation(fields: [userId], references: [id])
+  country Country @relation(fields: [countryId], references: [id])
+
+  @@unique([userId, countryId])
+}
+
+model CreditRequest {
+  id       String  @id @default(uuid()) @db.Uuid
+  amount   Decimal @db.Decimal(14, 2)
+  currency String
+  applicantName  String
+  applicantEmail String
+  document String
+  countryId String @db.Uuid
+  country   Country @relation(fields: [countryId], references: [id])
+  createdById String @db.Uuid
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  status CreditStatus @default(PENDING)
+  evaluations   CreditEvaluation[]
+  statusHistory CreditStatusHistory[]
+  createdAt DateTime @default(now())
+}
+
+enum CreditStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model CreditStatusHistory {
+  id String @id @default(uuid()) @db.Uuid
+
+  creditRequestId String @db.Uuid
+  creditRequest   CreditRequest @relation(fields: [creditRequestId], references: [id])
+  previousStatus CreditStatus?
+  newStatus      CreditStatus
+  changedById String? @db.Uuid
+  changedBy   User?   @relation(fields: [changedById], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model CreditEvaluation {
+  id String @id @default(uuid()) @db.Uuid
+  creditRequestId String @db.Uuid
+  creditRequest   CreditRequest @relation(fields: [creditRequestId], references: [id])
+  score     Int
+  riskLevel String
+  decision  CreditStatus
+  evaluatedAt DateTime @default(now())
+}

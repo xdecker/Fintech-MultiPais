@@ -1,0 +1,70 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { CreateCreditRequestUseCase } from '../use-cases/credit-request/create-credit-request.use-case';
+import { CreateCreditRequestDto } from '../dto/create-credit-request.dto';
+import { CREDIT_REQUEST_REPOSITORY } from '../../domain/interfaces/repositories/credit-request.repository';
+import type { CreditRequestRepository } from '../../domain/interfaces/repositories/credit-request.repository';
+import { GetAllCreditRequestsUseCase } from '../use-cases/credit-request/get-all-credit-request.use-case';
+import { GetCreditRequestByIdUseCase } from '../use-cases/credit-request/get-credit-request-by-Id.use-case';
+import { GetCreditRequestsByCountryUseCase } from '../use-cases/credit-request/get-credit-requests-by-country.use-case';
+import {
+  COUNTRY_REPOSITORY,
+  CountryRepository,
+} from 'src/domain/interfaces/repositories/country.repository';
+import { GetCountryByIdUseCase } from '../use-cases/country/get-country-by-id.use-case';
+import { CacheService } from 'src/domain/interfaces/cache.interface';
+import { REDIS_SERVICE_TOKEN } from 'src/infrastructure/cache/redis.service';
+
+@Injectable()
+export class CreditRequestService {
+  private readonly createCreditRequestUseCase: CreateCreditRequestUseCase;
+  private readonly getAllUseCase: GetAllCreditRequestsUseCase;
+  private readonly getByIdUseCase: GetCreditRequestByIdUseCase;
+  private readonly getByCountryUseCase: GetCreditRequestsByCountryUseCase;
+
+  constructor(
+    @Inject(CREDIT_REQUEST_REPOSITORY)
+    private readonly creditRequestRepository: CreditRequestRepository,
+
+    @Inject(COUNTRY_REPOSITORY)
+    private readonly countryRepository: CountryRepository,
+
+    @Inject(REDIS_SERVICE_TOKEN)
+    private cache: CacheService,
+  ) {
+    const getCountryByIdUseCase = new GetCountryByIdUseCase(
+      this.countryRepository,
+    );
+
+    this.createCreditRequestUseCase = new CreateCreditRequestUseCase(
+      this.creditRequestRepository,
+      getCountryByIdUseCase,
+    );
+    this.getAllUseCase = new GetAllCreditRequestsUseCase(
+      this.creditRequestRepository,
+      this.cache,
+    );
+    this.getByIdUseCase = new GetCreditRequestByIdUseCase(
+      this.creditRequestRepository,
+      this.cache,
+    );
+    this.getByCountryUseCase = new GetCreditRequestsByCountryUseCase(
+      this.creditRequestRepository,
+    );
+  }
+
+  async getAll(page = 1, limit = 10) {
+    return this.getAllUseCase.execute(page, limit);
+  }
+
+  async getById(id: string) {
+    return this.getByIdUseCase.execute(id);
+  }
+
+  async getByCountry(countryId: string) {
+    return this.getByCountryUseCase.execute(countryId);
+  }
+
+  async create(dto: CreateCreditRequestDto, id: string) {
+    return this.createCreditRequestUseCase.execute({ ...dto, createdById: id });
+  }
+}
