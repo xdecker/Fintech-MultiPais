@@ -48,6 +48,15 @@ export const CreditRequestList = () => {
     },
 
     {
+      accessorKey: "country",
+      header: "País",
+      cell: ({ row }) => {
+        const { country } = row.original;
+        return country.countryName;
+      },
+    },
+
+    {
       accessorKey: "_currency",
       header: "Moneda",
     },
