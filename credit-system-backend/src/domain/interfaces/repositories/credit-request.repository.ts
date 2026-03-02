@@ -11,7 +11,7 @@ export interface CreditRequestRepository {
 
   findById(id: string): Promise<CreditRequest | null>;
 
-  findAll(page: number, limit: number): Promise<PaginatedCreditRequests>;
+  findAll(page: number, limit: number, userId: string): Promise<PaginatedCreditRequests>;
 
   findByCountry(countryId: string): Promise<CreditRequest[]>;
 

@@ -38,8 +38,8 @@ export class CreditRequestController {
 
   @Get()
   @Roles(Role.ADMIN, Role.USER, Role.REVIEWER)
-  async getAll(@Query('page') page = 1, @Query('limit') limit = 10) {
-    return this.creditRequestService.getAll(page, limit);
+  async getAll(@Query('page') page = 1, @Query('limit') limit = 10, @Req() req) {
+    return this.creditRequestService.getAll(page, limit, req.user.id);
   }
 
   @Get(':id')

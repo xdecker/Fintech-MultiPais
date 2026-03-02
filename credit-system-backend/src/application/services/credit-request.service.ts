@@ -77,8 +77,8 @@ export class CreditRequestService {
     );
   }
 
-  async getAll(page = 1, limit = 10) {
-    return this.getAllUseCase.execute(page, limit);
+  async getAll(page = 1, limit = 10, userId: string) {
+    return this.getAllUseCase.execute(page, limit, userId);
   }
 
   async getById(id: string) {

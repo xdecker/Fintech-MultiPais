@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreditRequest } from 'src/domain/entities/credit-request.entity';
 import {
   CreditRequestRepository,
   PaginatedCreditRequests,
 } from 'src/domain/interfaces/repositories/credit-request.repository';
-import { CreditStatus } from '@prisma/client';
+import { CreditStatus, Role } from '@prisma/client';
 import { CreditRequestStatus } from 'src/domain/entities/enums/credit-request-status.enum';
 
 @Injectable()
@@ -103,18 +103,34 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
     );
   }
 
-  async findAll(page: number, limit: number): Promise<PaginatedCreditRequests> {
+  async findAll(
+    page: number,
+    limit: number,
+    userId: string,
+  ): Promise<PaginatedCreditRequests> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { countries: { select: { countryId: true } } },
+    });
+
+    if (!user) throw new ForbiddenException('Usuario no encontrado');
+
+    const whereClause: any = { active: true };
+
+    if (user.role !== Role.ADMIN) {
+      const assignedCountryIds = user.countries.map((uc) => uc.countryId);
+      whereClause.countryId = { in: assignedCountryIds };
+    }
+
     const [records, total] = await this.prisma.$transaction([
       this.prisma.creditRequest.findMany({
-        where: { active: true },
+        where: whereClause,
         skip: (page - 1) * limit,
         take: Number(limit),
-        include: {
-          country: { select: { name: true, code: true } },
-        },
+        include: { country: { select: { name: true, code: true } } },
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.creditRequest.count({ where: { active: true } }),
+      this.prisma.creditRequest.count({ where: whereClause }),
     ]);
 
     return {

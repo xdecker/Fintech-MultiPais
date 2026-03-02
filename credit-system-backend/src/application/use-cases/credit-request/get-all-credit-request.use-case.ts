@@ -13,7 +13,7 @@ export class GetAllCreditRequestsUseCase {
     private cache: CacheService,
   ) {}
 
-  async execute(page = 1, limit = 10) {
+  async execute(page = 1, limit = 10, userId: string) {
     const version = (await this.cache.get<number>(LIST_VERSION_KEY)) ?? 1;
 
     const key = CacheKeys.creditList(version, page, limit);
@@ -21,7 +21,7 @@ export class GetAllCreditRequestsUseCase {
     const cached = await this.cache.get(key);
     if (cached) return cached;
 
-    const result = await this.creditRequestRepository.findAll(page, limit);
+    const result = await this.creditRequestRepository.findAll(page, limit, userId);
 
     const response = {
       data: result.data,
