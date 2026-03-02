@@ -4,14 +4,12 @@ import { NavUser } from "./NavUser";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { NavSimple } from "./NavSimple";
-
-import { useEffect } from "react";
 import { MenuItems } from "./MenuItems";
+import { useAuth } from "@/providers/auth.provider";
 
 interface UserToken {
   role: string;
@@ -19,19 +17,7 @@ interface UserToken {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [user, setUser] = React.useState<UserToken>({ role: "", email: "" });
-
-  React.useLayoutEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setUser(parsed);
-      }
-    } catch (err) {
-      console.error("Error cargando user del localStorage", err);
-    }
-  }, []);
+  const { user } = useAuth();
 
   return (
     <Sidebar collapsible="icon" {...props} className="bg-sidebar-altern">

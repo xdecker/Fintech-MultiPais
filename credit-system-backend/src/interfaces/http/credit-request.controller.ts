@@ -24,7 +24,7 @@ export class CreditRequestController {
   constructor(private readonly creditRequestService: CreditRequestService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.USER)
+  @Roles(Role.ADMIN, Role.USER, Role.REVIEWER)
   async create(@Req() req, @Body() dto: CreateCreditRequestDto) {
     const result = await this.creditRequestService.create(dto, req.user.id);
 
@@ -37,28 +37,24 @@ export class CreditRequestController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.REVIEWER)
+  @Roles(Role.ADMIN, Role.USER, Role.REVIEWER)
   async getAll(@Query('page') page = 1, @Query('limit') limit = 10) {
     return this.creditRequestService.getAll(page, limit);
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.REVIEWER)
+  @Roles(Role.ADMIN, Role.USER, Role.REVIEWER)
   async getById(@Param('id') id: string) {
     return this.creditRequestService.getById(id);
   }
 
   @Get('country/:countryId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.REVIEWER)
+  @Roles(Role.ADMIN, Role.USER, Role.REVIEWER)
   async getByCountry(@Param('countryId') countryId: string) {
     return this.creditRequestService.getByCountry(countryId);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   async delete(@Param('id') id: string) {
     return this.creditRequestService.delete(id);

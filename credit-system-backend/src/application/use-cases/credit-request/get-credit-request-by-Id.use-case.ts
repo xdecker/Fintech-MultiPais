@@ -1,4 +1,4 @@
-import { Inject } from '@nestjs/common';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { CacheKeys } from 'src/application/cache/cache.keys';
 import { CreditRequest } from 'src/domain/entities/credit-request.entity';
@@ -20,8 +20,9 @@ export class GetCreditRequestByIdUseCase {
     if (cached) return cached;
 
     const credit = await this.creditRequestRepository.findById(id);
-
-    if (!credit) return null;
+    console.log('credit en detalle devuelve: ', credit);
+    if (!credit)
+      throw new NotFoundException('El credito seleccionado no está disponible');
 
     await this.cache.set(key, credit, 120);
 

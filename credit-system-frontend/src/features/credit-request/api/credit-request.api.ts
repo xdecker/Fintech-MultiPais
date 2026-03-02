@@ -4,6 +4,7 @@ import {
   CreditRequest,
   PaginatedCreditRequests,
   CreditRequestStatus,
+  CreditRequestDetail,
 } from "../types/credit-request";
 
 // GET list
@@ -15,7 +16,7 @@ export function getCreditRequests(page = 1, limit = 10) {
 
 // GET detail
 export function getCreditRequest(id: string) {
-  return apiClient<CreditRequest>(`/credit-request/${id}`, "GET");
+  return apiClient<CreditRequestDetail>(`/credit-request/${id}`, "GET");
 }
 
 // CREATE

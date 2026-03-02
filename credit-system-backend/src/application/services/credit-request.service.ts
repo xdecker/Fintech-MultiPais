@@ -94,4 +94,5 @@ export class CreditRequestService {
   async updateStatus(id: string, status: CreditRequestStatus, userId: string) {
     return this.updateStatusCreditUseCase.execute(id, status, userId);
   }
+
 }

@@ -1,9 +1,13 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
 import React, { useState } from "react";
-import { CreditRequest, CreditRequestStatus } from "../types/credit-request";
+import {
+  CreditRequest,
+  CreditRequestDetail,
+  CreditRequestStatus,
+} from "../types/credit-request";
 import { Button } from "@/components/ui/button";
-import { CircleEllipsis, Plus, Trash2, UserRound } from "lucide-react";
+import { CircleEllipsis, Eye, Plus, Trash2, UserRound } from "lucide-react";
 import { ConfirmDialog, CustomDataTable } from "@/components/shared";
 import { toast } from "sonner";
 import { useCustomDialog } from "@/providers/custom-dialog.provider";
@@ -12,14 +16,20 @@ import {
   useDeleteCreditRequest,
 } from "../hooks/use-credit-request";
 import clsx from "clsx";
-import { CreateCreditRequestDialog } from "./CreateCreditRequestDialog";
 import { UpdateCreditStatusDialog } from "./UpdateCreditsStatusDialog";
+import { CreateCreditRequestDialog } from "./CreateCreditRequestDialog";
+import { CreditRequestDetailDialog } from "./CreditRequestDetailDialog";
+import { useAuth } from "@/providers/auth.provider";
 
 export const CreditRequestList = () => {
   const columns: ColumnDef<CreditRequest>[] = [
     {
       accessorKey: "_id",
       header: "ID",
+      cell: ({ row }) => {
+        const { _id } = row.original;
+        return _id.toUpperCase().split("-").pop();
+      },
     },
     {
       accessorKey: "_document",
@@ -72,66 +82,75 @@ export const CreditRequestList = () => {
       header: "Acciones",
 
       cell: ({ row }) => {
-        const { _id } = row.original;
+        const credit = row.original;
 
         return (
           <div className="flex gap-2 justify-center">
-            <Button
-              variant="ghost"
-              className="cursor-pointer"
-              size="icon"
-              onClick={() => {
-                setCreditSelected(row.original);
-                setOpenUpdateStatusModal(true);
-              }}
-            >
-              <CircleEllipsis className="w-5 h-5 text-blue-800" />
-            </Button>
-
-            {user.role == "ADMIN"}
-            {
+            {/* 👁 DETALLE */}
+            {canViewDetail && (
               <Button
                 variant="ghost"
-                className="cursor-pointer"
                 size="icon"
+                className="cursor-pointer"
                 onClick={() => {
-                  setCreditSelected(row.original);
+                  setCreditSelected(credit);
+                  setOpenDetailModal(true);
+                }}
+              >
+                <Eye className="w-5 h-5 text-slate-700" />
+              </Button>
+            )}
+
+            {/* ✏️ UPDATE STATUS */}
+            {canUpdateStatus && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="cursor-pointer"
+                onClick={() => {
+                  setCreditSelected(credit);
+                  setOpenUpdateStatusModal(true);
+                }}
+              >
+                <CircleEllipsis className="w-5 h-5 text-blue-800" />
+              </Button>
+            )}
+
+            {/* 🗑 DELETE */}
+            {canDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="cursor-pointer"
+                onClick={() => {
+                  setCreditSelected(credit);
                   setOpenConfirm(true);
                 }}
               >
                 <Trash2 className="w-5 h-5 text-red-800" />
               </Button>
-            }
+            )}
           </div>
         );
       },
     },
   ];
-  React.useLayoutEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setUser(parsed);
-      }
-    } catch (err) {
-      console.error("Error cargando user del localStorage", err);
-    }
-  }, []);
-  const [user, setUser] = React.useState<{
-    role: string;
-    email: string;
-  }>({ role: "", email: "" });
+  const { user } = useAuth();
+  const canViewDetail = ["USER", "REVIEWER", "ADMIN"].includes(user!.role);
+  const canUpdateStatus = ["REVIEWER", "ADMIN"].includes(user!.role);
+  const canDelete = user!.role === "ADMIN";
   const [page, setPage] = useState(1);
   const limit = 10;
   const deleteMutation = useDeleteCreditRequest();
   const { data, isLoading, isError } = useCreditRequests(page, limit);
   const [openConfirm, setOpenConfirm] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState<boolean>(false);
+  const [openDetailModal, setOpenDetailModal] = useState<boolean>(false);
   const [openUpdateStatusModal, setOpenUpdateStatusModal] = useState(false);
   const [creditSelected, setCreditSelected] = useState<CreditRequest | null>(
     null
   );
+
   const { showDialog } = useCustomDialog();
 
   const handleDelete = async () => {
@@ -195,6 +214,12 @@ export const CreditRequestList = () => {
             onOpenChange={setOpenUpdateStatusModal}
             creditId={creditSelected._id}
             currentStatus={creditSelected._status}
+          />
+
+          <CreditRequestDetailDialog
+            open={openDetailModal}
+            onOpenChange={setOpenDetailModal}
+            creditId={creditSelected._id}
           />
         </>
       )}

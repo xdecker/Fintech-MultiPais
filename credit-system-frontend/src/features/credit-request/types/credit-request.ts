@@ -23,6 +23,25 @@ export interface CreditRequest {
   _status: string;
 }
 
+export interface CreditRequestDetail extends CreditRequest {
+  _history: HistoryCreditRequest[];
+  _evaluation: EvaluationCreditRequest;
+}
+
+export interface HistoryCreditRequest {
+  previousStatus: string;
+  newStatus: string;
+  changedBy: string;
+  createdAt: Date;
+}
+
+export interface EvaluationCreditRequest {
+  score: number;
+  riskLevel: string;
+  decision: string;
+  evaluatedAt: Date;
+}
+
 export enum CreditRequestStatus {
   PENDING = "PENDING",
   UNDER_REVIEW = "UNDER_REVIEW",
@@ -30,11 +49,7 @@ export enum CreditRequestStatus {
   REJECTED = "REJECTED",
 }
 
-export type CreditStatus =
-  | "CREATED"
-  | "UNDER_REVIEW"
-  | "APPROVED"
-  | "REJECTED";
+export type CreditStatus = "CREATED" | "UNDER_REVIEW" | "APPROVED" | "REJECTED";
 
 export interface PaginatedCreditRequests {
   data: CreditRequest[];

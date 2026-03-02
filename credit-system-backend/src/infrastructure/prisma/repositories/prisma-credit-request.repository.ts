@@ -40,11 +40,49 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
   }
   async findById(id: string): Promise<CreditRequest | null> {
     const record = await this.prisma.creditRequest.findUnique({
-      where: { id, active: true },
-      include: { country: { select: { name: true, code: true } } },
+      where: {
+        id,
+        active: true,
+      },
+      include: {
+        country: {
+          select: {
+            name: true,
+            code: true,
+          },
+        },
+        statusHistory: {
+          orderBy: { createdAt: 'asc' },
+          include: {
+            changedBy: {
+              select: { email: true },
+            },
+          },
+        },
+        evaluations: {
+          orderBy: { evaluatedAt: 'desc' },
+          take: 1,
+        },
+      },
     });
 
     if (!record) return null;
+
+    const history = record.statusHistory.map((h) => ({
+      previousStatus: h.previousStatus as CreditRequestStatus,
+      newStatus: h.newStatus as CreditRequestStatus,
+      changedBy: h.changedBy?.email ?? 'system',
+      createdAt: h.createdAt,
+    }));
+
+    const evaluation = record.evaluations[0]
+      ? {
+          score: record.evaluations[0].score,
+          riskLevel: record.evaluations[0].riskLevel,
+          decision: record.evaluations[0].decision as CreditRequestStatus,
+          evaluatedAt: record.evaluations[0].evaluatedAt,
+        }
+      : undefined;
 
     return new CreditRequest(
       record.id,
@@ -60,8 +98,11 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
         countryCode: record.country.code,
       },
       record.status as CreditRequestStatus,
+      history,
+      evaluation,
     );
   }
+  
   async findAll(page: number, limit: number): Promise<PaginatedCreditRequests> {
     const [records, total] = await this.prisma.$transaction([
       this.prisma.creditRequest.findMany({

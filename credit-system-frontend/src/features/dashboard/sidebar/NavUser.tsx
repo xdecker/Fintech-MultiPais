@@ -25,9 +25,10 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { getTwoCapitalLetter } from "@/utils/format";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useLogin } from "@/features/auth/hooks/useLogin";
+import { AuthProvider, useAuth } from "@/providers/auth.provider";
 // import { UserToken } from "@/features/auth/interfaces/LoginInterfaces";
 
 // interface NavUserProps {
@@ -36,7 +37,7 @@ import { useLogin } from "@/features/auth/hooks/useLogin";
 
 export function NavUser({ user }: any) {
   const { isMobile } = useSidebar();
-  //const { logOut } = useLogin();
+  const { logout } = useAuth();
   const [openConfirm, setOpenConfirm] = useState(false);
 
   return (
@@ -95,7 +96,7 @@ export function NavUser({ user }: any) {
       <ConfirmDialog
         open={openConfirm}
         onClose={() => setOpenConfirm(false)}
-        onConfirm={() => () => {}}
+        onConfirm={() => logout()}
         title="Cerrar Sesión"
         description="¿Seguro que deseas cerrar sesión?"
         icon={<LogOutIcon className="text-slate-500 w-10 h-10" />}
