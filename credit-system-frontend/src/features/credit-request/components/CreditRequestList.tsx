@@ -29,7 +29,7 @@ export const CreditRequestList = () => {
       header: "ID",
       cell: ({ row }) => {
         const { _id } = row.original;
-        return _id.toUpperCase().split("-").pop();
+        return _id;
       },
     },
     {
