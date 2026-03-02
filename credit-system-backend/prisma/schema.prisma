@@ -29,6 +29,7 @@ model Country {
   id   String @id @default(uuid()) @db.Uuid
   code String @unique
   name String
+  currency String @default("USD")
   users          UserCountry[]
   creditRequests CreditRequest[]
   createdAt DateTime @default(now())
@@ -51,6 +52,7 @@ model CreditRequest {
   applicantName  String
   applicantEmail String
   document String
+  active  Boolean @default(true)
   countryId String @db.Uuid
   country   Country @relation(fields: [countryId], references: [id])
   createdById String @db.Uuid
@@ -59,6 +61,7 @@ model CreditRequest {
   evaluations   CreditEvaluation[]
   statusHistory CreditStatusHistory[]
   createdAt DateTime @default(now())
+  updatedAt           DateTime   @default(now())        @updatedAt
 }
 
 enum CreditStatus {

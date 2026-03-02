@@ -1,6 +1,11 @@
 import { CreditRequestStatus } from './enums/credit-request-status.enum';
 import { isEmail } from 'class-validator';
 
+export interface CreditRequestReadProps {
+  countryName?: string;
+  countryCode?: string;
+}
+
 export class CreditRequest {
   private _status: CreditRequestStatus;
 
@@ -13,6 +18,7 @@ export class CreditRequest {
     private readonly _document: string,
     private readonly _countryId: string,
     private readonly _createdById: string,
+    private readonly country?: CreditRequestReadProps,
     status?: CreditRequestStatus,
   ) {
     this.validateAmount(_amount);

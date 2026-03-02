@@ -6,6 +6,8 @@ import {
   Req,
   Get,
   Param,
+  Query,
+  Delete,
 } from '@nestjs/common';
 import { CreditRequestService } from 'src/application/services/credit-request.service';
 import { CreateCreditRequestDto } from 'src/application/dto/create-credit-request.dto';
@@ -35,8 +37,8 @@ export class CreditRequestController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.REVIEWER)
-  async getAll() {
-    return this.creditRequestService.getAll();
+  async getAll(@Query('page') page = 1, @Query('limit') limit = 10) {
+    return this.creditRequestService.getAll(page, limit);
   }
 
   @Get(':id')
@@ -51,5 +53,12 @@ export class CreditRequestController {
   @Roles(Role.ADMIN, Role.REVIEWER)
   async getByCountry(@Param('countryId') countryId: string) {
     return this.creditRequestService.getByCountry(countryId);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async delete(@Param('id') id: string) {
+    return this.creditRequestService.delete(id);
   }
 }

@@ -19,11 +19,11 @@ async function main() {
 
   // Crear países
   const spain = await prisma.country.create({
-    data: { code: 'ES', name: 'España' },
+    data: { code: 'ES', name: 'España', currency:"EUR" },
   });
 
   const mexico = await prisma.country.create({
-    data: { code: 'MX', name: 'México' },
+    data: { code: 'MX', name: 'México', currency:"MXN" },
   });
 
   // Crear usuarios

@@ -13,6 +13,7 @@ import {
 import { GetCountryByIdUseCase } from '../use-cases/country/get-country-by-id.use-case';
 import { CacheService } from 'src/domain/interfaces/cache.interface';
 import { REDIS_SERVICE_TOKEN } from 'src/infrastructure/cache/redis.service';
+import { DeleteCreditRequestByIdUseCase } from '../use-cases/credit-request/delete-credit-request.use-case';
 
 @Injectable()
 export class CreditRequestService {
@@ -20,6 +21,7 @@ export class CreditRequestService {
   private readonly getAllUseCase: GetAllCreditRequestsUseCase;
   private readonly getByIdUseCase: GetCreditRequestByIdUseCase;
   private readonly getByCountryUseCase: GetCreditRequestsByCountryUseCase;
+  private readonly deleteUsecase: DeleteCreditRequestByIdUseCase;
 
   constructor(
     @Inject(CREDIT_REQUEST_REPOSITORY)
@@ -50,6 +52,11 @@ export class CreditRequestService {
     this.getByCountryUseCase = new GetCreditRequestsByCountryUseCase(
       this.creditRequestRepository,
     );
+
+    this.deleteUsecase = new DeleteCreditRequestByIdUseCase(
+      this.creditRequestRepository,
+      this.cache,
+    );
   }
 
   async getAll(page = 1, limit = 10) {
@@ -66,5 +73,9 @@ export class CreditRequestService {
 
   async create(dto: CreateCreditRequestDto, id: string) {
     return this.createCreditRequestUseCase.execute({ ...dto, createdById: id });
+  }
+
+  async delete(id: string) {
+    return this.deleteUsecase.execute(id);
   }
 }

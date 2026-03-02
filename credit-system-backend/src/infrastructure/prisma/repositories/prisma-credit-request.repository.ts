@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreditRequest } from 'src/domain/entities/credit-request.entity';
-import { CreditRequestRepository } from 'src/domain/interfaces/repositories/credit-request.repository';
+import {
+  CreditRequestRepository,
+  PaginatedCreditRequests,
+} from 'src/domain/interfaces/repositories/credit-request.repository';
 import { CreditStatus } from '@prisma/client';
 import { CreditRequestStatus } from 'src/domain/entities/enums/credit-request-status.enum';
 
@@ -37,7 +40,8 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
   }
   async findById(id: string): Promise<CreditRequest | null> {
     const record = await this.prisma.creditRequest.findUnique({
-      where: { id },
+      where: { id, active: true },
+      include: { country: { select: { name: true, code: true } } },
     });
 
     if (!record) return null;
@@ -51,30 +55,48 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
       record.document,
       record.countryId,
       record.createdById,
+      {
+        countryName: record.country.name,
+        countryCode: record.country.code,
+      },
       record.status as CreditRequestStatus,
     );
   }
-  async findAll(page: number, limit: number): Promise<CreditRequest[]> {
-    const records = await this.prisma.creditRequest.findMany({
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAll(page: number, limit: number): Promise<PaginatedCreditRequests> {
+    const [records, total] = await this.prisma.$transaction([
+      this.prisma.creditRequest.findMany({
+        where: { active: true },
+        skip: (page - 1) * limit,
+        take: Number(limit),
+        include: {
+          country: { select: { name: true, code: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.creditRequest.count({ where: { active: true } }),
+    ]);
 
-    return records.map(
-      (r) =>
-        new CreditRequest(
-          r.id,
-          Number(r.amount),
-          r.currency,
-          r.applicantName,
-          r.applicantEmail,
-          r.document,
-          r.countryId,
-          r.createdById,
-          r.status as CreditRequestStatus,
-        ),
-    );
+    return {
+      total,
+      data: records.map(
+        (r) =>
+          new CreditRequest(
+            r.id,
+            Number(r.amount),
+            r.currency,
+            r.applicantName,
+            r.applicantEmail,
+            r.document,
+            r.countryId,
+            r.createdById,
+            {
+              countryName: r.country.name,
+              countryCode: r.country.code,
+            },
+            r.status as CreditRequestStatus,
+          ),
+      ),
+    };
   }
 
   async findByCountry(countryId: string): Promise<CreditRequest[]> {
@@ -126,6 +148,13 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
         riskLevel: entry.riskLevel,
         decision: entry.decision as CreditStatus,
       },
+    });
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.creditRequest.update({
+      where: { id },
+      data: { active: false },
     });
   }
 }
