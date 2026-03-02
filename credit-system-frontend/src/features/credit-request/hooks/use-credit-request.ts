@@ -9,9 +9,11 @@ import {
   updateStatusRequest,
 } from "../api/credit-request.api";
 import { CreditRequestDetail } from "../types/credit-request";
+import { useAuth } from "@/providers/auth.provider";
 
 export const CREDIT_REQUESTS_KEY = "credit-request";
 export const CREDIT_REQUEST_DETAIL_KEY = "credit-request-detail";
+const token = localStorage.getItem("token");
 
 export function useCreateCreditRequest() {
   const qc = useQueryClient();
@@ -28,8 +30,9 @@ export function useCreateCreditRequest() {
 
 export function useCreditRequests(page: number, limit: number) {
   return useQuery({
-    queryKey: [CREDIT_REQUESTS_KEY, page, limit],
+    queryKey: [CREDIT_REQUESTS_KEY, page, limit, token],
     queryFn: () => getCreditRequests(page, limit),
+    enabled: !!token,
   });
 }
 

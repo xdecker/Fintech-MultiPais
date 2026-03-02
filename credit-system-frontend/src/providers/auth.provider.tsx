@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthUser {
@@ -22,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -52,6 +54,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    queryClient.clear();
+    queryClient.resetQueries({ exact: true });
+    queryClient.invalidateQueries();
+
     setToken(null);
     setUser(null);
   };

@@ -48,7 +48,7 @@ export function NavUser({ user }: any) {
             >
               <div className="relative">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarFallback className="rounded-lg">us</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">{getTwoCapitalLetter(user?.email ?? "us")}</AvatarFallback>
                 </Avatar>
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
