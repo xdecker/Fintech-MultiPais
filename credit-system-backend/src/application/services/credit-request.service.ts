@@ -17,6 +17,7 @@ import { DeleteCreditRequestByIdUseCase } from '../use-cases/credit-request/dele
 import { CreditRequestStatus } from 'src/domain/entities/enums/credit-request-status.enum';
 import { UpdateStatusCreditUseCase } from '../use-cases/credit-request/update-status-credit-request.use-case';
 import { CreditGateway } from 'src/infrastructure/websocket/credit.gateway';
+import { GetDashboardSummaryUseCase } from '../use-cases/dashboard/get-dashboard-summary.use-case';
 
 @Injectable()
 export class CreditRequestService {
@@ -26,6 +27,7 @@ export class CreditRequestService {
   private readonly getByCountryUseCase: GetCreditRequestsByCountryUseCase;
   private readonly deleteUsecase: DeleteCreditRequestByIdUseCase;
   private readonly updateStatusCreditUseCase: UpdateStatusCreditUseCase;
+  private readonly getDashboardSummaryUseCase: GetDashboardSummaryUseCase;
 
   constructor(
     @Inject(CREDIT_REQUEST_REPOSITORY)
@@ -37,7 +39,7 @@ export class CreditRequestService {
     @Inject(REDIS_SERVICE_TOKEN)
     private cache: CacheService,
 
-    private readonly creditGateway: CreditGateway
+    private readonly creditGateway: CreditGateway,
   ) {
     const getCountryByIdUseCase = new GetCountryByIdUseCase(
       this.countryRepository,
@@ -69,6 +71,10 @@ export class CreditRequestService {
       this.creditRequestRepository,
       this.creditGateway,
     );
+
+    this.getDashboardSummaryUseCase = new GetDashboardSummaryUseCase(
+      this.creditRequestRepository,
+    );
   }
 
   async getAll(page = 1, limit = 10) {
@@ -95,4 +101,7 @@ export class CreditRequestService {
     return this.updateStatusCreditUseCase.execute(id, status, userId);
   }
 
+  async getSummaryOfDashboard() {
+    return this.getDashboardSummaryUseCase.execute();
+  }
 }

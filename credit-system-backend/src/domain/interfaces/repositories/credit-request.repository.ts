@@ -32,6 +32,15 @@ export interface CreditRequestRepository {
   delete(id: string): Promise<void>;
 
   changeStatus(id: string, status: CreditRequestStatus): Promise<CreditRequest>;
+
+  getDashboardSummary(): Promise<{
+    totalRequests: number;
+    pendingRequests: number;
+    approvedRequests: number;
+    totalAmount: number;
+    requestsLast7Days: { date: string; count: number }[];
+    requestsByCountry: { country: string; count: number }[];
+  }>;
 }
 
 export const CREDIT_REQUEST_REPOSITORY = 'CREDIT_REQUEST_REPOSITORY';

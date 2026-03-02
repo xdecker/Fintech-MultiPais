@@ -23,10 +23,16 @@ import {
   RedisService,
 } from './infrastructure/cache/redis.service';
 import { PostgresListenerService } from './infrastructure/db/postgres/postgres-listener.service';
+import { DashboardController } from './interfaces/http/dashboard.controller';
 
 @Module({
   imports: [PrismaModule, AuthModule, AppLoggerModule],
-  controllers: [CreditRequestController, AuthController, BankWebhookController],
+  controllers: [
+    CreditRequestController,
+    AuthController,
+    BankWebhookController,
+    DashboardController,
+  ],
   providers: [
     PostgresListenerService,
     CreditGateway,

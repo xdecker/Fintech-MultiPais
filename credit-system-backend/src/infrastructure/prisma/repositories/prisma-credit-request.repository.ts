@@ -102,7 +102,7 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
       evaluation,
     );
   }
-  
+
   async findAll(page: number, limit: number): Promise<PaginatedCreditRequests> {
     const [records, total] = await this.prisma.$transaction([
       this.prisma.creditRequest.findMany({
@@ -219,5 +219,58 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
       undefined,
       record.status as CreditRequestStatus,
     );
+  }
+
+  async getDashboardSummary() {
+    // KPIs
+    const [totalRequests, pendingRequests, approvedRequests, totalAmount] =
+      await Promise.all([
+        this.prisma.creditRequest.count(),
+        this.prisma.creditRequest.count({
+          where: { status: 'PENDING' },
+        }),
+        this.prisma.creditRequest.count({
+          where: { status: 'APPROVED' },
+        }),
+        this.prisma.creditRequest.aggregate({
+          _sum: { amount: true },
+        }),
+      ]);
+
+    // últimos 7 días
+    const last7Days = await this.prisma.$queryRaw<
+      { date: string; count: number }[]
+    >`
+      SELECT
+        DATE("createdAt") as date,
+        COUNT(*)::int as count
+      FROM "CreditRequest"
+      WHERE "createdAt" >= NOW() - INTERVAL '7 days'
+      GROUP BY date
+      ORDER BY date;
+    `;
+
+    // por país
+    const byCountry = await this.prisma.$queryRaw<
+      { country: string; count: number }[]
+    >`
+      SELECT
+        c.name AS country,
+        COUNT(cr.id)::int AS total
+      FROM "Country" c
+      LEFT JOIN "CreditRequest" cr
+        ON cr."countryId" = c.id
+      GROUP BY c.name
+      ORDER BY total DESC;
+      `;
+
+    return {
+      totalRequests,
+      pendingRequests,
+      approvedRequests,
+      totalAmount: Number(totalAmount._sum.amount) ?? 0,
+      requestsLast7Days: last7Days,
+      requestsByCountry: byCountry,
+    };
   }
 }

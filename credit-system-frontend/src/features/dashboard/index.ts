@@ -1,2 +1,2 @@
-export * from './sidebar/AppSidebar';
-export * from './sidebar/MenuItems';
+export * from './components/sidebar/AppSidebar';
+export * from './components/sidebar/MenuItems';
