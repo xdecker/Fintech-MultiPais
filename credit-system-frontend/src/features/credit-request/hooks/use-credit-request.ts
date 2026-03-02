@@ -5,7 +5,9 @@ import {
   createCreditRequest,
   deleteCreditRequest,
   getCreditRequests,
+  updateStatusRequest,
 } from "../api/credit-request.api";
+import { CreditRequestStatus } from "../types/credit-request";
 
 export const CREDIT_REQUESTS_KEY = "credit-request";
 
@@ -36,6 +38,21 @@ export function useDeleteCreditRequest() {
     mutationFn: (id: string) => deleteCreditRequest(id),
     onSuccess: () => {
       qc.invalidateQueries({
+        queryKey: [CREDIT_REQUESTS_KEY],
+      });
+    },
+  });
+}
+
+export function useUpdateCreditStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      updateStatusRequest(id, status as any),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
         queryKey: [CREDIT_REQUESTS_KEY],
       });
     },

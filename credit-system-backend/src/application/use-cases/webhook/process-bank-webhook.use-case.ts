@@ -4,7 +4,7 @@ import { UserRepository } from 'src/domain/interfaces/repositories/user.reposito
 import { BankResultDto } from 'src/infrastructure/webhook/dto/bank-result.dto';
 import { BadRequestException, Inject } from '@nestjs/common';
 import { EventPublisher } from 'src/domain/interfaces/event-publisher.interface';
-import { EVENTPUBLISHER } from 'src/domain/interfaces/websocket/websocket-event.publisher';
+import { EVENTPUBLISHER } from 'src/infrastructure/websocket/websocket-event.publisher';
 import { CREDIT_EVENTS } from 'src/domain/events/credit-events';
 import { CacheKeys, LIST_VERSION_KEY } from 'src/application/cache/cache.keys';
 import { REDIS_SERVICE_TOKEN } from 'src/infrastructure/cache/redis.service';

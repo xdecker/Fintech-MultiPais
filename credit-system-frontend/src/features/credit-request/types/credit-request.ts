@@ -30,6 +30,12 @@ export enum CreditRequestStatus {
   REJECTED = "REJECTED",
 }
 
+export type CreditStatus =
+  | "CREATED"
+  | "UNDER_REVIEW"
+  | "APPROVED"
+  | "REJECTED";
+
 export interface PaginatedCreditRequests {
   data: CreditRequest[];
   meta: {

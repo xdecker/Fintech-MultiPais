@@ -3,6 +3,7 @@ import {
   FormCreditRequest,
   CreditRequest,
   PaginatedCreditRequests,
+  CreditRequestStatus,
 } from "../types/credit-request";
 
 // GET list
@@ -25,4 +26,10 @@ export function createCreditRequest(data: FormCreditRequest) {
 // DELETE
 export function deleteCreditRequest(id: string) {
   return apiClient<string | null>(`/credit-request/${id}`, "DELETE");
+}
+
+export function updateStatusRequest(id: string, status: CreditRequestStatus) {
+  return apiClient<CreditRequest>(`/credit-request/status/${id}`, "PATCH", {
+    data: { status },
+  });
 }

@@ -24,7 +24,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   React.useLayoutEffect(() => {
     try {
       const stored = localStorage.getItem("user");
-      console.log(stored);
       if (stored) {
         const parsed = JSON.parse(stored);
         setUser(parsed);
@@ -35,7 +34,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, []);
 
   return (
-    <Sidebar collapsible="icon" {...props} className="bg-sidebar-altern"  >
+    <Sidebar collapsible="icon" {...props} className="bg-sidebar-altern">
       <SidebarHeader>
         <NavUser user={user} />
       </SidebarHeader>

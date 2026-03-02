@@ -7,6 +7,7 @@ import { BadRequestException } from '@nestjs/common';
 import { CreditRequestStatus } from 'src/domain/entities/enums/credit-request-status.enum';
 import { riskQueue } from 'src/workers/risk-evaluation.worker';
 import { BankProviderFactory } from 'src/domain/strategies/bank-provider.factory';
+import { CreditGateway } from 'src/infrastructure/websocket/credit.gateway';
 
 interface CreateCreditRequestInput {
   amount: number;
@@ -22,6 +23,8 @@ export class CreateCreditRequestUseCase {
   constructor(
     private readonly creditRequestRepository: CreditRequestRepository,
     private readonly getCountryByIdUseCase: GetCountryByIdUseCase,
+
+    private readonly creditGateway: CreditGateway,
   ) {}
 
   async execute(input: CreateCreditRequestInput): Promise<CreditRequest> {
@@ -58,6 +61,10 @@ export class CreateCreditRequestUseCase {
       previousStatus: CreditRequestStatus.PENDING,
       newStatus: creditRequest.status,
       changedById: input.createdById,
+    });
+
+    this.creditGateway.emit('credit.updated', {
+      id: creditRequest.id,
     });
     await riskQueue.add('evaluate-risk', {
       creditRequestId: creditRequest.id,

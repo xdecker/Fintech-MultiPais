@@ -3,7 +3,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import React, { useState } from "react";
 import { CreditRequest, CreditRequestStatus } from "../types/credit-request";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, UserRound } from "lucide-react";
+import { CircleEllipsis, Plus, Trash2, UserRound } from "lucide-react";
 import { ConfirmDialog, CustomDataTable } from "@/components/shared";
 import { toast } from "sonner";
 import { useCustomDialog } from "@/providers/custom-dialog.provider";
@@ -13,6 +13,7 @@ import {
 } from "../hooks/use-credit-request";
 import clsx from "clsx";
 import { CreateCreditRequestDialog } from "./CreateCreditRequestDialog";
+import { UpdateCreditStatusDialog } from "./UpdateCreditsStatusDialog";
 
 export const CreditRequestList = () => {
   const columns: ColumnDef<CreditRequest>[] = [
@@ -81,22 +82,53 @@ export const CreditRequestList = () => {
               size="icon"
               onClick={() => {
                 setCreditSelected(row.original);
-                setOpenConfirm(true);
+                setOpenUpdateStatusModal(true);
               }}
             >
-              <Trash2 className="w-5 h-5 text-red-800" />
+              <CircleEllipsis className="w-5 h-5 text-blue-800" />
             </Button>
+
+            {user.role == "ADMIN"}
+            {
+              <Button
+                variant="ghost"
+                className="cursor-pointer"
+                size="icon"
+                onClick={() => {
+                  setCreditSelected(row.original);
+                  setOpenConfirm(true);
+                }}
+              >
+                <Trash2 className="w-5 h-5 text-red-800" />
+              </Button>
+            }
           </div>
         );
       },
     },
   ];
+  React.useLayoutEffect(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setUser(parsed);
+      }
+    } catch (err) {
+      console.error("Error cargando user del localStorage", err);
+    }
+  }, []);
+  const [user, setUser] = React.useState<{
+    role: string;
+    email: string;
+  }>({ role: "", email: "" });
   const [page, setPage] = useState(1);
   const limit = 10;
   const deleteMutation = useDeleteCreditRequest();
   const { data, isLoading, isError } = useCreditRequests(page, limit);
   const [openConfirm, setOpenConfirm] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState<boolean>(false);
+  const [openUpdateStatusModal, setOpenUpdateStatusModal] = useState(false);
   const [creditSelected, setCreditSelected] = useState<CreditRequest | null>(
     null
   );
@@ -145,16 +177,27 @@ export const CreditRequestList = () => {
         pageIndex={page - 1}
       />
 
-      <ConfirmDialog
-        open={openConfirm}
-        onClose={() => {
-          setOpenConfirm(false);
-        }}
-        onConfirm={() => handleDelete()}
-        title={"Eliminar Solicitud"}
-        description={`¿Seguro que deseas eliminar la solicitud de credito de  ${creditSelected?._applicantName} | ${creditSelected?.country.countryCode}`}
-        icon={<UserRound className="text-slate-500 w-10 h-10" />}
-      />
+      {creditSelected && (
+        <>
+          <ConfirmDialog
+            open={openConfirm}
+            onClose={() => {
+              setOpenConfirm(false);
+            }}
+            onConfirm={() => handleDelete()}
+            title={"Eliminar Solicitud"}
+            description={`¿Seguro que deseas eliminar la solicitud de credito de  ${creditSelected?._applicantName} | ${creditSelected?.country.countryCode}`}
+            icon={<UserRound className="text-slate-500 w-10 h-10" />}
+          />
+
+          <UpdateCreditStatusDialog
+            open={openUpdateStatusModal}
+            onOpenChange={setOpenUpdateStatusModal}
+            creditId={creditSelected._id}
+            currentStatus={creditSelected._status}
+          />
+        </>
+      )}
 
       <CreateCreditRequestDialog
         open={openCreateModal}

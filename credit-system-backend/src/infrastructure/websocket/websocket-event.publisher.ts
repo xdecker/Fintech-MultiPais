@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreditGateway } from './credit.gateway';
-import { EventPublisher, DomainEvent } from '../event-publisher.interface';
+import { EventPublisher, DomainEvent } from '../../domain/interfaces/event-publisher.interface';
 
 @Injectable()
 export class WebsocketEventPublisher implements EventPublisher {

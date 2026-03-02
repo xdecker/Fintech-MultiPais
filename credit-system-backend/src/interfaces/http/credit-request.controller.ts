@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { CreditRequestService } from 'src/application/services/credit-request.service';
 import { CreateCreditRequestDto } from 'src/application/dto/create-credit-request.dto';
@@ -15,13 +16,14 @@ import { JwtAuthGuard } from 'src/infrastructure/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/infrastructure/auth/roles.guard';
 import { Roles } from 'src/infrastructure/auth/roles.decorator';
 import { Role } from '@prisma/client';
+import { CreditRequestStatus } from 'src/domain/entities/enums/credit-request-status.enum';
 
 @Controller('credit-request')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class CreditRequestController {
   constructor(private readonly creditRequestService: CreditRequestService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.USER)
   async create(@Req() req, @Body() dto: CreateCreditRequestDto) {
     const result = await this.creditRequestService.create(dto, req.user.id);
@@ -60,5 +62,15 @@ export class CreditRequestController {
   @Roles(Role.ADMIN)
   async delete(@Param('id') id: string) {
     return this.creditRequestService.delete(id);
+  }
+
+  @Patch('status/:id')
+  @Roles(Role.ADMIN, Role.REVIEWER)
+  async updateStatus(
+    @Req() req,
+    @Param('id') id: string,
+    @Body() dto: { status: CreditRequestStatus },
+  ) {
+    return this.creditRequestService.updateStatus(id, dto.status, req.user.id);
   }
 }

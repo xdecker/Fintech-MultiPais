@@ -157,4 +157,26 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
       data: { active: false },
     });
   }
+
+  async changeStatus(
+    id: string,
+    status: CreditRequestStatus,
+  ): Promise<CreditRequest> {
+    const record = await this.prisma.creditRequest.update({
+      data: { status },
+      where: { id },
+    });
+    return new CreditRequest(
+      record.id,
+      Number(record.amount),
+      record.currency,
+      record.applicantName,
+      record.applicantEmail,
+      record.document,
+      record.countryId,
+      record.createdById,
+      undefined,
+      record.status as CreditRequestStatus,
+    );
+  }
 }

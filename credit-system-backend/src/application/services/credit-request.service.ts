@@ -14,6 +14,9 @@ import { GetCountryByIdUseCase } from '../use-cases/country/get-country-by-id.us
 import { CacheService } from 'src/domain/interfaces/cache.interface';
 import { REDIS_SERVICE_TOKEN } from 'src/infrastructure/cache/redis.service';
 import { DeleteCreditRequestByIdUseCase } from '../use-cases/credit-request/delete-credit-request.use-case';
+import { CreditRequestStatus } from 'src/domain/entities/enums/credit-request-status.enum';
+import { UpdateStatusCreditUseCase } from '../use-cases/credit-request/update-status-credit-request.use-case';
+import { CreditGateway } from 'src/infrastructure/websocket/credit.gateway';
 
 @Injectable()
 export class CreditRequestService {
@@ -22,6 +25,7 @@ export class CreditRequestService {
   private readonly getByIdUseCase: GetCreditRequestByIdUseCase;
   private readonly getByCountryUseCase: GetCreditRequestsByCountryUseCase;
   private readonly deleteUsecase: DeleteCreditRequestByIdUseCase;
+  private readonly updateStatusCreditUseCase: UpdateStatusCreditUseCase;
 
   constructor(
     @Inject(CREDIT_REQUEST_REPOSITORY)
@@ -32,6 +36,8 @@ export class CreditRequestService {
 
     @Inject(REDIS_SERVICE_TOKEN)
     private cache: CacheService,
+
+    private readonly creditGateway: CreditGateway
   ) {
     const getCountryByIdUseCase = new GetCountryByIdUseCase(
       this.countryRepository,
@@ -40,6 +46,7 @@ export class CreditRequestService {
     this.createCreditRequestUseCase = new CreateCreditRequestUseCase(
       this.creditRequestRepository,
       getCountryByIdUseCase,
+      this.creditGateway,
     );
     this.getAllUseCase = new GetAllCreditRequestsUseCase(
       this.creditRequestRepository,
@@ -56,6 +63,11 @@ export class CreditRequestService {
     this.deleteUsecase = new DeleteCreditRequestByIdUseCase(
       this.creditRequestRepository,
       this.cache,
+    );
+
+    this.updateStatusCreditUseCase = new UpdateStatusCreditUseCase(
+      this.creditRequestRepository,
+      this.creditGateway,
     );
   }
 
@@ -77,5 +89,9 @@ export class CreditRequestService {
 
   async delete(id: string) {
     return this.deleteUsecase.execute(id);
+  }
+
+  async updateStatus(id: string, status: CreditRequestStatus, userId: string) {
+    return this.updateStatusCreditUseCase.execute(id, status, userId);
   }
 }

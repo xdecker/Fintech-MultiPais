@@ -30,6 +30,8 @@ export interface CreditRequestRepository {
   }): Promise<void>;
 
   delete(id: string): Promise<void>;
+
+  changeStatus(id: string, status: CreditRequestStatus): Promise<CreditRequest>;
 }
 
 export const CREDIT_REQUEST_REPOSITORY = 'CREDIT_REQUEST_REPOSITORY';

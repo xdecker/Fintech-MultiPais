@@ -9,16 +9,21 @@ export function useCreditRealtime() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    socket.connect();
+    if (!socket.connected) {
+      socket.connect();
+      console.log("ws connected");
+    }
 
-    socket.on("credit.updated", () => {
+    const handler = () => {
       queryClient.invalidateQueries({
         queryKey: [CREDIT_REQUESTS_KEY],
       });
-    });
+    };
+
+    socket.on("credit.updated", handler);
 
     return () => {
-      socket.off("credit.updated");
+      socket.off("credit.updated", handler);
     };
   }, [queryClient]);
 }
