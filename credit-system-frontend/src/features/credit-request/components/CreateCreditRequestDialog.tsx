@@ -11,15 +11,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import clsx from "clsx";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
 import { useCreateCreditRequest } from "../hooks/use-credit-request";
 import { useCustomDialog } from "@/providers/custom-dialog.provider";
+import { useEffect } from "react";
+import { Country } from "@/features/country/interfaces/country";
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  countries: Country[];
 }
 
 type FormInputs = {
@@ -31,7 +41,11 @@ type FormInputs = {
   countryId: string;
 };
 
-export const CreateCreditRequestDialog = ({ open, onClose }: Props) => {
+export const CreateCreditRequestDialog = ({
+  open,
+  onClose,
+  countries,
+}: Props) => {
   const createMutation = useCreateCreditRequest();
   const { showDialog } = useCustomDialog();
 
@@ -39,10 +53,23 @@ export const CreateCreditRequestDialog = ({ open, onClose }: Props) => {
     register,
     handleSubmit,
     reset,
+    watch,
+    control,
     formState: { errors, isValid },
+    setValue,
   } = useForm<FormInputs>({
     mode: "onChange",
   });
+
+  const selectedCountryId = watch("countryId");
+
+  useEffect(() => {
+    if (selectedCountryId) {
+      console.log("en useEffect");
+      const selected = countries.find((c) => c._id === selectedCountryId);
+      setValue("currency", selected?._currency || "USD");
+    }
+  }, [selectedCountryId, countries, setValue]);
 
   const onSubmit = async (data: FormInputs) => {
     try {
@@ -110,22 +137,38 @@ export const CreateCreditRequestDialog = ({ open, onClose }: Props) => {
             />
           </div>
 
-          {/* Moneda */}
+          {/* Country */}
           <div className="space-y-2">
-            <Label>Moneda</Label>
-            <Input
-              defaultValue="USD"
-              {...register("currency", { required: true })}
+            <Label>País</Label>
+            <Controller
+              name="countryId"
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger 
+                    className={clsx("border p-2 rounded w-full", {
+                      "border-red-500": errors.countryId,
+                    })}
+                  >
+                    <SelectValue placeholder="Selecciona un país" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((c) => (
+                      <SelectItem key={c._id} value={c._id}>
+                        {c._name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
           </div>
 
-          {/* Country */}
+          {/* Moneda */}
           <div className="space-y-2">
-            <Label>Country ID</Label>
-            <Input
-              className={clsx({ "border-red-500": errors.countryId })}
-              {...register("countryId", { required: true })}
-            />
+            <Label>Moneda</Label>
+            <Input value={watch("currency") || "USD"} disabled />
           </div>
 
           <DialogFooter className="pt-4">

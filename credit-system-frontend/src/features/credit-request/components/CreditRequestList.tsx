@@ -20,6 +20,7 @@ import { UpdateCreditStatusDialog } from "./UpdateCreditsStatusDialog";
 import { CreateCreditRequestDialog } from "./CreateCreditRequestDialog";
 import { CreditRequestDetailDialog } from "./CreditRequestDetailDialog";
 import { useAuth } from "@/providers/auth.provider";
+import { useCountriesRequest } from "../hooks/use-country-request";
 
 export const CreditRequestList = () => {
   const columns: ColumnDef<CreditRequest>[] = [
@@ -143,6 +144,8 @@ export const CreditRequestList = () => {
   const limit = 10;
   const deleteMutation = useDeleteCreditRequest();
   const { data, isLoading, isError } = useCreditRequests(page, limit);
+  const { data: countries } = useCountriesRequest();
+  console.log("paises: ", countries);
   const [openConfirm, setOpenConfirm] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState<boolean>(false);
   const [openDetailModal, setOpenDetailModal] = useState<boolean>(false);
@@ -226,6 +229,7 @@ export const CreditRequestList = () => {
 
       <CreateCreditRequestDialog
         open={openCreateModal}
+        countries={countries ?? []}
         onClose={() => setOpenCreateModal(false)}
       />
     </>

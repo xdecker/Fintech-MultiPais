@@ -4,7 +4,7 @@ import { JwtAuthGuard } from 'src/infrastructure/auth/jwt-auth.guard';
 
 @Controller('country')
 @UseGuards(JwtAuthGuard)
-export class CreditRequestController {
+export class CountryController {
   constructor(private readonly countryService: CountryService) {}
 
   @Get()

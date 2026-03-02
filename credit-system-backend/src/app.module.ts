@@ -24,6 +24,8 @@ import {
 } from './infrastructure/cache/redis.service';
 import { PostgresListenerService } from './infrastructure/db/postgres/postgres-listener.service';
 import { DashboardController } from './interfaces/http/dashboard.controller';
+import { CountryController } from './interfaces/http/country.controller';
+import { CountryService } from './application/services/country.service';
 
 @Module({
   imports: [PrismaModule, AuthModule, AppLoggerModule],
@@ -32,6 +34,7 @@ import { DashboardController } from './interfaces/http/dashboard.controller';
     AuthController,
     BankWebhookController,
     DashboardController,
+    CountryController,
   ],
   providers: [
     PostgresListenerService,
@@ -41,6 +44,7 @@ import { DashboardController } from './interfaces/http/dashboard.controller';
       useClass: WebsocketEventPublisher,
     },
     CreditRequestService,
+    CountryService,
     BankWebhookService,
     {
       provide: CREDIT_REQUEST_REPOSITORY,
