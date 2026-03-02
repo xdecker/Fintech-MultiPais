@@ -29,14 +29,11 @@ import { useContext, useState } from "react";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useLogin } from "@/features/auth/hooks/useLogin";
 import { AuthProvider, useAuth } from "@/providers/auth.provider";
-// import { UserToken } from "@/features/auth/interfaces/LoginInterfaces";
-
-// interface NavUserProps {
-//   user: UserToken;
-// }
+import { useRouter } from "next/navigation";
 
 export function NavUser({ user }: any) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
   const { logout } = useAuth();
   const [openConfirm, setOpenConfirm] = useState(false);
 
@@ -55,8 +52,7 @@ export function NavUser({ user }: any) {
                 </Avatar>
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className=" text-xs">{user.email}</span>
+                <span className=" text-xs">{user?.email}</span>
               </div>
               <EllipsisVertical className="text-blue-800 ml-auto size-4" />
             </SidebarMenuButton>
@@ -71,12 +67,11 @@ export function NavUser({ user }: any) {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarFallback className="rounded-lg">
-                    {getTwoCapitalLetter(user.email)}
+                    {getTwoCapitalLetter(user?.email ?? "us")}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate text-xs">{user?.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -96,7 +91,10 @@ export function NavUser({ user }: any) {
       <ConfirmDialog
         open={openConfirm}
         onClose={() => setOpenConfirm(false)}
-        onConfirm={() => logout()}
+        onConfirm={() => {
+          logout();
+          router.replace("/login");
+        }}
         title="Cerrar Sesión"
         description="¿Seguro que deseas cerrar sesión?"
         icon={<LogOutIcon className="text-slate-500 w-10 h-10" />}

@@ -146,9 +146,13 @@ export const CreditRequestList = () => {
     },
   ];
   const { user } = useAuth();
-  const canViewDetail = ["USER", "REVIEWER", "ADMIN"].includes(user!.role);
-  const canUpdateStatus = ["REVIEWER", "ADMIN"].includes(user!.role);
-  const canDelete = user!.role === "ADMIN";
+  const canViewDetail = !user
+    ? false
+    : ["USER", "REVIEWER", "ADMIN"].includes(user.role);
+  const canUpdateStatus = !user
+    ? false
+    : ["REVIEWER", "ADMIN"].includes(user.role);
+  const canDelete = !user ? false : user!.role === "ADMIN";
   const [page, setPage] = useState(1);
   const limit = 10;
   const deleteMutation = useDeleteCreditRequest();
