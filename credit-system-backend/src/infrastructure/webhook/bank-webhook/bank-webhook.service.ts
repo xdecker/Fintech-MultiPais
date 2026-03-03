@@ -9,7 +9,7 @@ import {
   UserRepository,
 } from 'src/domain/interfaces/repositories/user.repository';
 import { BankResultDto } from '../dto/bank-result.dto';
-import { EVENTPUBLISHER } from 'src/domain/interfaces/websocket/websocket-event.publisher';
+import { EVENTPUBLISHER } from 'src/infrastructure/websocket/websocket-event.publisher';
 import { EventPublisher } from 'src/domain/interfaces/event-publisher.interface';
 import { REDIS_SERVICE_TOKEN } from 'src/infrastructure/cache/redis.service';
 import { CacheService } from 'src/domain/interfaces/cache.interface';

@@ -13,19 +13,28 @@ export class GetAllCreditRequestsUseCase {
     private cache: CacheService,
   ) {}
 
-  async execute(page = 1, limit = 10) {
-    let version = (await this.cache.get<number>(LIST_VERSION_KEY)) ?? 1;
+  async execute(page = 1, limit = 10, userId: string) {
+    const version = (await this.cache.get<number>(LIST_VERSION_KEY)) ?? 1;
 
-    const key = CacheKeys.creditList(version);
+    const key = CacheKeys.creditList(version, page, limit);
 
     const cached = await this.cache.get(key);
-
     if (cached) return cached;
 
-    const credits = await this.creditRequestRepository.findAll(page, limit);
+    const result = await this.creditRequestRepository.findAll(page, limit, userId);
 
-    await this.cache.set(key, credits, 60);
+    const response = {
+      data: result.data,
+      meta: {
+        page,
+        limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / limit),
+      },
+    };
 
-    return credits;
+    await this.cache.set(key, response, 60);
+
+    return response;
   }
 }

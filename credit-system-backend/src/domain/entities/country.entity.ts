@@ -3,6 +3,7 @@ export class Country {
     private readonly _id: string,
     private readonly _code: string,
     private readonly _name: string,
+    private readonly _currency: string,
   ) {}
 
   get id() {
@@ -15,5 +16,9 @@ export class Country {
 
   get name() {
     return this._name;
+  }
+
+  get currency() {
+    return this._currency;
   }
 }

@@ -11,10 +11,7 @@ import axios from 'axios';
 logger.info('Risk worker started');
 
 export const riskQueue = new Queue('risk-evaluation', {
-  connection: {
-    host: 'localhost',
-    port: 6379,
-  },
+  connection: { url: process.env.REDIS_URL || 'redis://redis:6379' },
 });
 
 const prismaService = new PrismaService();
@@ -65,7 +62,6 @@ new Worker(
         decision: newStatus,
       });
 
-      
       logger.info(
         {
           creditRequestId,
@@ -80,9 +76,6 @@ new Worker(
     }
   },
   {
-    connection: {
-      host: 'localhost',
-      port: 6379,
-    },
+    connection: { url: process.env.REDIS_URL || 'redis://redis:6379' },
   },
 );

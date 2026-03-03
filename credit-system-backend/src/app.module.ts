@@ -13,20 +13,29 @@ import { USER_REPOSITORY } from './domain/interfaces/repositories/user.repositor
 import { AppLoggerModule } from './infrastructure/logger/logger.module';
 import { BankWebhookController } from './infrastructure/webhook/bank-webhook/bank-webhook.controller';
 import { BankWebhookService } from './infrastructure/webhook/bank-webhook/bank-webhook.service';
-import { CreditGateway } from './domain/interfaces/websocket/credit.gateway';
+import { CreditGateway } from './infrastructure/websocket/credit.gateway';
 import {
   EVENTPUBLISHER,
   WebsocketEventPublisher,
-} from './domain/interfaces/websocket/websocket-event.publisher';
+} from './infrastructure/websocket/websocket-event.publisher';
 import {
   REDIS_SERVICE_TOKEN,
   RedisService,
 } from './infrastructure/cache/redis.service';
 import { PostgresListenerService } from './infrastructure/db/postgres/postgres-listener.service';
+import { DashboardController } from './interfaces/http/dashboard.controller';
+import { CountryController } from './interfaces/http/country.controller';
+import { CountryService } from './application/services/country.service';
 
 @Module({
   imports: [PrismaModule, AuthModule, AppLoggerModule],
-  controllers: [CreditRequestController, AuthController, BankWebhookController],
+  controllers: [
+    CreditRequestController,
+    AuthController,
+    BankWebhookController,
+    DashboardController,
+    CountryController,
+  ],
   providers: [
     PostgresListenerService,
     CreditGateway,
@@ -35,6 +44,7 @@ import { PostgresListenerService } from './infrastructure/db/postgres/postgres-l
       useClass: WebsocketEventPublisher,
     },
     CreditRequestService,
+    CountryService,
     BankWebhookService,
     {
       provide: CREDIT_REQUEST_REPOSITORY,

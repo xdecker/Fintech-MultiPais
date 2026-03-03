@@ -11,24 +11,33 @@ async function main() {
 
   logger.info('Running seed...');
 
-  // Limpiar datos si quieres pruebas limpias
+  await prisma.creditStatusHistory.deleteMany();
+  await prisma.creditEvaluation.deleteMany();
   await prisma.creditRequest.deleteMany();
   await prisma.userCountry.deleteMany();
   await prisma.user.deleteMany();
   await prisma.country.deleteMany();
 
-  // Crear países
-  const spain = await prisma.country.create({
-    data: { code: 'ES', name: 'España' },
+  const countriesData = [
+    { code: 'ES', name: 'España', currency: 'EUR' },
+    { code: 'PT', name: 'Portugal', currency: 'EUR' },
+    { code: 'IT', name: 'Italia', currency: 'EUR' },
+    { code: 'MX', name: 'México', currency: 'MXN' },
+    { code: 'CO', name: 'Colombia', currency: 'COP' },
+    { code: 'BR', name: 'Brasil', currency: 'BRL' },
+  ];
+
+  await prisma.country.createMany({
+    data: countriesData,
+    skipDuplicates: true,
   });
 
-  const mexico = await prisma.country.create({
-    data: { code: 'MX', name: 'México' },
-  });
+  const countries = await prisma.country.findMany();
 
   // Crear usuarios
   const adminPassword = await bcrypt.hash('admin123', 10);
   const userPassword = await bcrypt.hash('user123', 10);
+  const reviewerPassword = await bcrypt.hash('review123', 10);
 
   const admin = await prisma.user.create({
     data: {
@@ -36,7 +45,7 @@ async function main() {
       password: adminPassword,
       role: 'ADMIN',
       countries: {
-        create: [{ countryId: spain.id }, { countryId: mexico.id }],
+        create: countries.map((c) => ({ countryId: c.id })),
       },
     },
   });
@@ -47,12 +56,32 @@ async function main() {
       password: userPassword,
       role: 'USER',
       countries: {
-        create: [{ countryId: spain.id }],
+        create: [
+          { countryId: countries.find((c) => c.code === 'ES')!.id },
+          { countryId: countries.find((c) => c.code === 'MX')!.id },
+          { countryId: countries.find((c) => c.code === 'CO')!.id },
+        ],
       },
     },
   });
 
-  logger.info({ spain, mexico, admin, user });
+  const reviewer = await prisma.user.create({
+    data: {
+      email: 'reviewer@test.com',
+      password: reviewerPassword,
+      role: 'REVIEWER',
+      countries: {
+        create: [
+          { countryId: countries.find((c) => c.code === 'ES')!.id },
+          { countryId: countries.find((c) => c.code === 'MX')!.id },
+          { countryId: countries.find((c) => c.code === 'CO')!.id },
+          { countryId: countries.find((c) => c.code === 'BR')!.id },
+        ],
+      },
+    },
+  });
+
+  logger.info({ countries, admin, user, reviewer });
 
   // Desconectar
   await prisma.$disconnect();

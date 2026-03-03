@@ -1,6 +1,25 @@
 import { CreditRequestStatus } from './enums/credit-request-status.enum';
 import { isEmail } from 'class-validator';
 
+export interface CreditRequestReadProps {
+  countryName?: string;
+  countryCode?: string;
+}
+
+interface CreditRequestHistory {
+  previousStatus: CreditRequestStatus;
+  newStatus: CreditRequestStatus;
+  changedBy: String;
+  createdAt: Date;
+}
+
+interface CreditEvaluation {
+  score: number;
+  riskLevel: String;
+  decision: CreditRequestStatus;
+  evaluatedAt: Date;
+}
+
 export class CreditRequest {
   private _status: CreditRequestStatus;
 
@@ -13,7 +32,10 @@ export class CreditRequest {
     private readonly _document: string,
     private readonly _countryId: string,
     private readonly _createdById: string,
+    private readonly country?: CreditRequestReadProps,
     status?: CreditRequestStatus,
+    private readonly _history?: CreditRequestHistory[],
+    private readonly _evaluation?: CreditEvaluation,
   ) {
     this.validateAmount(_amount);
     this.validateEmail(_applicantEmail);
@@ -55,6 +77,14 @@ export class CreditRequest {
 
   get status() {
     return this._status;
+  }
+
+  get history() {
+    return this._history;
+  }
+
+  get evaluation() {
+    return this._evaluation;
   }
 
   submitForReview() {

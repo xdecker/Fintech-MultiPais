@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreditRequest } from 'src/domain/entities/credit-request.entity';
-import { CreditRequestRepository } from 'src/domain/interfaces/repositories/credit-request.repository';
-import { CreditStatus } from '@prisma/client';
+import {
+  CreditRequestRepository,
+  PaginatedCreditRequests,
+} from 'src/domain/interfaces/repositories/credit-request.repository';
+import { CreditStatus, Role } from '@prisma/client';
 import { CreditRequestStatus } from 'src/domain/entities/enums/credit-request-status.enum';
 
 @Injectable()
@@ -37,10 +40,49 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
   }
   async findById(id: string): Promise<CreditRequest | null> {
     const record = await this.prisma.creditRequest.findUnique({
-      where: { id },
+      where: {
+        id,
+        active: true,
+      },
+      include: {
+        country: {
+          select: {
+            name: true,
+            code: true,
+          },
+        },
+        statusHistory: {
+          orderBy: { createdAt: 'asc' },
+          include: {
+            changedBy: {
+              select: { email: true },
+            },
+          },
+        },
+        evaluations: {
+          orderBy: { evaluatedAt: 'desc' },
+          take: 1,
+        },
+      },
     });
 
     if (!record) return null;
+
+    const history = record.statusHistory.map((h) => ({
+      previousStatus: h.previousStatus as CreditRequestStatus,
+      newStatus: h.newStatus as CreditRequestStatus,
+      changedBy: h.changedBy?.email ?? 'system',
+      createdAt: h.createdAt,
+    }));
+
+    const evaluation = record.evaluations[0]
+      ? {
+          score: record.evaluations[0].score,
+          riskLevel: record.evaluations[0].riskLevel,
+          decision: record.evaluations[0].decision as CreditRequestStatus,
+          evaluatedAt: record.evaluations[0].evaluatedAt,
+        }
+      : undefined;
 
     return new CreditRequest(
       record.id,
@@ -51,30 +93,67 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
       record.document,
       record.countryId,
       record.createdById,
+      {
+        countryName: record.country.name,
+        countryCode: record.country.code,
+      },
       record.status as CreditRequestStatus,
+      history,
+      evaluation,
     );
   }
-  async findAll(page: number, limit: number): Promise<CreditRequest[]> {
-    const records = await this.prisma.creditRequest.findMany({
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
+
+  async findAll(
+    page: number,
+    limit: number,
+    userId: string,
+  ): Promise<PaginatedCreditRequests> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { countries: { select: { countryId: true } } },
     });
 
-    return records.map(
-      (r) =>
-        new CreditRequest(
-          r.id,
-          Number(r.amount),
-          r.currency,
-          r.applicantName,
-          r.applicantEmail,
-          r.document,
-          r.countryId,
-          r.createdById,
-          r.status as CreditRequestStatus,
-        ),
-    );
+    if (!user) throw new ForbiddenException('Usuario no encontrado');
+
+    const whereClause: any = { active: true };
+
+    if (user.role !== Role.ADMIN) {
+      const assignedCountryIds = user.countries.map((uc) => uc.countryId);
+      whereClause.countryId = { in: assignedCountryIds };
+    }
+
+    const [records, total] = await this.prisma.$transaction([
+      this.prisma.creditRequest.findMany({
+        where: whereClause,
+        skip: (page - 1) * limit,
+        take: Number(limit),
+        include: { country: { select: { name: true, code: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.creditRequest.count({ where: whereClause }),
+    ]);
+
+    return {
+      total,
+      data: records.map(
+        (r) =>
+          new CreditRequest(
+            r.id,
+            Number(r.amount),
+            r.currency,
+            r.applicantName,
+            r.applicantEmail,
+            r.document,
+            r.countryId,
+            r.createdById,
+            {
+              countryName: r.country.name,
+              countryCode: r.country.code,
+            },
+            r.status as CreditRequestStatus,
+          ),
+      ),
+    };
   }
 
   async findByCountry(countryId: string): Promise<CreditRequest[]> {
@@ -127,5 +206,87 @@ export class PrismaCreditRequestRepository implements CreditRequestRepository {
         decision: entry.decision as CreditStatus,
       },
     });
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.creditRequest.update({
+      where: { id },
+      data: { active: false },
+    });
+  }
+
+  async changeStatus(
+    id: string,
+    status: CreditRequestStatus,
+  ): Promise<CreditRequest> {
+    const record = await this.prisma.creditRequest.update({
+      data: { status },
+      where: { id },
+    });
+    return new CreditRequest(
+      record.id,
+      Number(record.amount),
+      record.currency,
+      record.applicantName,
+      record.applicantEmail,
+      record.document,
+      record.countryId,
+      record.createdById,
+      undefined,
+      record.status as CreditRequestStatus,
+    );
+  }
+
+  async getDashboardSummary() {
+    // KPIs
+    const [totalRequests, pendingRequests, approvedRequests, totalAmount] =
+      await Promise.all([
+        this.prisma.creditRequest.count(),
+        this.prisma.creditRequest.count({
+          where: { status: 'PENDING' },
+        }),
+        this.prisma.creditRequest.count({
+          where: { status: 'APPROVED' },
+        }),
+        this.prisma.creditRequest.aggregate({
+          _sum: { amount: true },
+        }),
+      ]);
+
+    // últimos 7 días
+    const last7Days = await this.prisma.$queryRaw<
+      { date: string; count: number }[]
+    >`
+      SELECT
+        DATE("createdAt") as date,
+        COUNT(*)::int as count
+      FROM "CreditRequest"
+      WHERE "createdAt" >= NOW() - INTERVAL '7 days'
+      GROUP BY date
+      ORDER BY date;
+    `;
+
+    // por país
+    const byCountry = await this.prisma.$queryRaw<
+      { country: string; count: number }[]
+    >`
+      SELECT
+        c.name AS country,
+        COUNT(cr.id)::int AS total
+      FROM "Country" c
+      LEFT JOIN "CreditRequest" cr
+        ON cr."countryId" = c.id
+      GROUP BY c.name
+      ORDER BY total DESC;
+      `;
+
+    return {
+      totalRequests,
+      pendingRequests,
+      approvedRequests,
+      totalAmount: Number(totalAmount._sum.amount) ?? 0,
+      requestsLast7Days: last7Days,
+      requestsByCountry: byCountry,
+    };
   }
 }

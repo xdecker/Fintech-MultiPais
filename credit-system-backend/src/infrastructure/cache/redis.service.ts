@@ -4,11 +4,10 @@ import { CacheService } from 'src/domain/interfaces/cache.interface';
 
 @Injectable()
 export class RedisService implements CacheService {
-  private client = new Redis({
-    host: 'localhost',
-    port: 6379,
-  });
-
+  private client = new Redis(process.env.REDIS_URL || 'redis://redis:6379');
+  constructor() {
+    console.log('Connecting to Redis at:', process.env.REDIS_URL);
+  }
   async get<T>(key: string): Promise<T | null> {
     const data = await this.client.get(key);
     return data ? JSON.parse(data) : null;

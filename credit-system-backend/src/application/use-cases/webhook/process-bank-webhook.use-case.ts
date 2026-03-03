@@ -2,9 +2,9 @@ import { CreditRequestRepository } from 'src/domain/interfaces/repositories/cred
 import { CreditRequestStatus } from 'src/domain/entities/enums/credit-request-status.enum';
 import { UserRepository } from 'src/domain/interfaces/repositories/user.repository';
 import { BankResultDto } from 'src/infrastructure/webhook/dto/bank-result.dto';
-import { Inject } from '@nestjs/common';
+import { BadRequestException, Inject } from '@nestjs/common';
 import { EventPublisher } from 'src/domain/interfaces/event-publisher.interface';
-import { EVENTPUBLISHER } from 'src/domain/interfaces/websocket/websocket-event.publisher';
+import { EVENTPUBLISHER } from 'src/infrastructure/websocket/websocket-event.publisher';
 import { CREDIT_EVENTS } from 'src/domain/events/credit-events';
 import { CacheKeys, LIST_VERSION_KEY } from 'src/application/cache/cache.keys';
 import { REDIS_SERVICE_TOKEN } from 'src/infrastructure/cache/redis.service';
@@ -26,7 +26,8 @@ export class ProcessBankWebhookUseCase {
       input.creditRequestId,
     );
 
-    if (!creditRequest) return;
+    if (!creditRequest)
+      throw new BadRequestException('La solicitud de credito no es válida');
 
     const previousStatus = creditRequest.status;
 
@@ -66,10 +67,8 @@ export class ProcessBankWebhookUseCase {
       },
     });
 
-    await this.cache.del(
-      CacheKeys.creditDetail(creditRequest.id),
-    );
-    
+    await this.cache.del(CacheKeys.creditDetail(creditRequest.id));
+
     await this.cache.incr(LIST_VERSION_KEY);
   }
 }
