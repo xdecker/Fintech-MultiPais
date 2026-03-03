@@ -18,14 +18,21 @@ async function main() {
   await prisma.user.deleteMany();
   await prisma.country.deleteMany();
 
-  // Crear países
-  const spain = await prisma.country.create({
-    data: { code: 'ES', name: 'España', currency: 'EUR' },
+  const countriesData = [
+    { code: 'ES', name: 'España', currency: 'EUR' },
+    { code: 'PT', name: 'Portugal', currency: 'EUR' },
+    { code: 'IT', name: 'Italia', currency: 'EUR' },
+    { code: 'MX', name: 'México', currency: 'MXN' },
+    { code: 'CO', name: 'Colombia', currency: 'COP' },
+    { code: 'BR', name: 'Brasil', currency: 'BRL' },
+  ];
+
+  await prisma.country.createMany({
+    data: countriesData,
+    skipDuplicates: true,
   });
 
-  const mexico = await prisma.country.create({
-    data: { code: 'MX', name: 'México', currency: 'MXN' },
-  });
+  const countries = await prisma.country.findMany();
 
   // Crear usuarios
   const adminPassword = await bcrypt.hash('admin123', 10);
@@ -38,7 +45,7 @@ async function main() {
       password: adminPassword,
       role: 'ADMIN',
       countries: {
-        create: [{ countryId: spain.id }, { countryId: mexico.id }],
+        create: countries.map((c) => ({ countryId: c.id })),
       },
     },
   });
@@ -49,7 +56,11 @@ async function main() {
       password: userPassword,
       role: 'USER',
       countries: {
-        create: [{ countryId: spain.id }],
+        create: [
+          { countryId: countries.find((c) => c.code === 'ES')!.id },
+          { countryId: countries.find((c) => c.code === 'MX')!.id },
+          { countryId: countries.find((c) => c.code === 'CO')!.id },
+        ],
       },
     },
   });
@@ -60,12 +71,17 @@ async function main() {
       password: reviewerPassword,
       role: 'REVIEWER',
       countries: {
-        create: [{ countryId: spain.id }, { countryId: mexico.id }],
+        create: [
+          { countryId: countries.find((c) => c.code === 'ES')!.id },
+          { countryId: countries.find((c) => c.code === 'MX')!.id },
+          { countryId: countries.find((c) => c.code === 'CO')!.id },
+          { countryId: countries.find((c) => c.code === 'BR')!.id },
+        ],
       },
     },
   });
 
-  logger.info({ spain, mexico, admin, user, reviewer });
+  logger.info({ countries, admin, user, reviewer });
 
   // Desconectar
   await prisma.$disconnect();
