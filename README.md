@@ -160,7 +160,7 @@ Abrir: [http://localhost:3001](http://localhost:3001)
 ---
 
 ## Posibles mejoras futuras
-
+- Unit Testing y pruebas de integracion tanto back como front
 - Dockerizar frontend y backend al 100% para no depender de entorno local  
 - Agregar más filtros y controles en el listado de créditos  
 - Completar módulo de auth: creación de usuarios, recuperación de contraseña, asignar paises  
